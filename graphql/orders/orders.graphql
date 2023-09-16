@@ -1,0 +1,102 @@
+type Query {
+  orders: [Order]
+  failedPulls: [FailedCrmOrder]
+  failedPushes: [FailedErpOrder]
+  unpushed: [Order]
+  ignoredOrders: [IgnoredOrder]
+  failedPullOrderById(ids: [String]!): [FailedCrmOrder]
+}
+
+type Mutation {
+  repullCrmOrders(ids: [String]!): [FailedCrmOrder]
+  ignoreCrmOrders(ids: [String]!): [FailedCrmOrder]
+  repushFailedStagedOrders(ids: [String]!): [FailedErpOrder]
+  ignoreFailedStagedOrders(ids: [String]!): [FailedErpOrder]
+  unignoreOrder(ids: [IgnoredObject]!): [IgnoredOrder]
+  deleteFailedStagedOrder(ids: [String]!): [FailedErpOrder]
+}
+
+type Order {
+  OrderNumber: String
+  CustomerNumber: String
+  Market: String
+  CurrencyCode: String
+  CreatedDate: String
+  OrderDate: String
+  Warehouse: String
+  PushStatusId: Int
+  ShipToName: String
+  ShipDate: String
+  ShipMethod: String
+  TrackingNumber: String
+  OrderTotalAmount: Float
+  FreightAmount: Float
+  FreightTaxAmount: Float
+  TaxAmount: Float
+  DiscountAmount: Float
+  OrderNotes: String
+  Phone1: String
+  Phone2: String
+  Phone3: String
+  BillAddressId: Float
+  ShipAddressId: Float
+  StagingImportDate: String
+  PickupName: String
+  OrderTypeDescription: String
+  ReferenceOrderNumber: String
+  ErpOrderNumber: String
+  SentToErp: String
+  SentTo3PL: String
+  Error: String
+}
+
+type FailedCrmOrder {
+  Id: ID!
+  OrderNumber: String!
+  OrderDate: String!
+  OrderTotal: Float!
+  CurrencyCode: String!
+  Message: String!
+  At: String! 
+  IgnoredAt: String
+  Exception: String
+}
+
+type FailedErpOrder {
+  OrderNumber: String!
+  CustomerNumber: String!
+  Market: String!
+  CurrencyCode: String!
+  OrderDate: String!
+  Warehouse: String
+  ShipToName: String
+  ShipDate: String
+  OrderTotalAmount: Float!
+  OrderTypeDescription: String
+  StagingImportDate: String!
+  ErpBatchId: String
+  ErrorCode: String
+  ErrorMessage: String!
+}
+
+type IgnoredOrder {
+  Type: String
+  OrderNumber: String
+  OrderDate: String
+  OrderTotal: Float
+  CurrencyCode: String
+  IgnoredDate: String
+  Message: String
+  User: String
+}
+
+type OrderItem {
+  product: Product
+  quantity: Int
+  itemNumber: Int!
+}
+
+input IgnoredObject {
+  CRM: String
+  ERP: String
+}

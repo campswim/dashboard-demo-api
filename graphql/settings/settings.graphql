@@ -1,0 +1,73 @@
+type Query {
+  maps: [Maps]
+  params: [Params]
+  getParamByName(name: String!): Params
+  getType(table: String!, column: String!): DataType
+  getValueTypeId(dataType: String!): DataTypeId
+  logChange(table: String!, column: String!, userId: Int!, prevValue: String, newValue: String, dataType: String!): Change
+}
+
+type Mutation {
+  paramsUpdate(id: ID!, column: String!, newValue: String): Params
+  mapsUpdate(id: ID!, column: String!, newValue: String): Maps
+}
+
+type Maps {
+  Id: ID
+  IsoCountryCode: String
+  ErpCompanyId: String
+  IsoCurrencyCode: String
+  ErpCurrencyCode: String
+  SourceWarehouse: String
+  SourceShipMethod: String
+  DestinationWarehouse: String
+  ProcessingSequence: Int
+  ActivatedAt: String
+  DeactivatedAt: String
+  ModifiedAt: String
+  ModifiedBy: String
+  Error: Error
+}
+
+type Params {
+  Name: String
+  Value: String
+  Category: String
+  SubCategory: String
+  ValueTypeId: Int
+  ValueType: String
+  Notes: String
+  EnabledDate: String
+  ModifiedAt: String
+  ModifiedBy: String
+  UserId: String
+  Error: Error
+}
+
+type DataType {
+  ColumnName: String
+  DataType: String
+  MaxLength: Int
+}
+
+type DataTypeId {
+  Id: ID!
+}
+
+type Error {
+  name: String
+  code: String
+  message: String
+}
+
+type Change {
+  Id: ID!
+  TableName: String
+  ColumnName: String
+  UserId: Int
+  PrevValue: String
+  NewValue: String
+  DataType: Int
+  DateTime: String
+  Error: String
+}

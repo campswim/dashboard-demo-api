@@ -1,0 +1,40 @@
+type Query {
+  users: [User]
+  me: User
+  getUserRoles: [Role]
+  getUserRestrictions(roleId: Int): Role
+  userById(id: ID!): User
+  userByEmail(email: String!): User
+}
+
+type Mutation {
+  signup(email: String!, usersName: String!, password: String!, role: Int!): User
+  signin(id: ID!, password: String!): User
+  deleteUser(ids: [ID]!): [User]
+  changePassword(id: ID!, password: String!, firstSignin: Boolean!): User
+  userUpdate(id: ID!, column: String!, newValue: String!): User
+  signout: User
+}
+
+type User {
+  Id: ID
+  Name: String
+  Email: String
+  Role: String
+  RoleId: Int
+  DateRegistered: String
+  LastLogin: String
+  LoggedIn: Int
+  FailedAttempts: Int
+  Active: Boolean
+  Message: String
+  Error: String
+}
+
+type Role {
+  Id: ID
+  Role: String
+  RestrictedPages: String
+  RestrictedActions: String
+  Error: String
+}

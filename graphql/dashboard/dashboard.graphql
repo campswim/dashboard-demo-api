@@ -1,0 +1,21 @@
+type Query {
+  checkDbConnection: DbConnected!
+  getAllActiveItems(daysBack: Int!, markets: [String]!): [Item]
+  getAllErpItems(itemCodes: [ItemObject]!, markets: [String]!, environment: String): [Item]
+}
+
+type Item {
+  ItemCode: String
+  Country: String
+  Error: String
+}
+
+type DbConnected {
+  Connected: Boolean!
+  Message: String
+}
+
+input ItemObject {
+  ItemCode: String
+  Country: String
+}

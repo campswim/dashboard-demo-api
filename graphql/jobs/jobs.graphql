@@ -1,0 +1,19 @@
+type Query {
+  getAllProcessingErrors: [Job]
+}
+
+type Job {
+  Id: ID!
+  Name: String!
+  ProcessJobId: Int!
+  OrderNumber: String!
+  LineNumber: Int
+  Category: String
+  ExternalSystem: String!
+  DataDirection: String!
+  At: String!
+  Message: String!
+  Exception: String
+  AdditionalData: String
+  Error: String
+}
