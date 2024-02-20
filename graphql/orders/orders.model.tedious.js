@@ -7,7 +7,7 @@ const getAllOrders = () => {
   // const TYPES = require('tedious').TYPES;
   const { Connection, config } = dbConnectTedious();
   const connection = new Connection(config);  
-  const request = new Request('SELECT TOP (10) [OrderNumber] FROM [StagingHub].[dbo].[Orders]', (err, rowCount) => { 
+  const request = new Request('SELECT TOP (10) [OrderNumber] FROM [sql3684435].[dbo].[Orders]', (err, rowCount) => { 
     if (err) console.error(err);
     else console.log({result, rowCount});
   });
