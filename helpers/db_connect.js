@@ -6,10 +6,10 @@ const { getCreateIfNotExistPool } = require('./mssql-connection-pooling');
 
 // Connection to Microsoft SQL Server DB via the npm package node-mssql, which has async-and-await functionality.
 async function dbConnectMsSql(database) {
-  const user = ${database}_DB_USERNAME;
-  const pwd = ${database}_DB_PASSWORD;
-  const db = ${database}_DB_NAME;
-  const server = ${database}_HOST;
+  const user = `${database}_DB_USERNAME`;
+  const pwd = `${database}_DB_PASSWORD`;
+  const db = `${database}_DB_NAME`;
+  const server = `${database}_HOST`;
   const sqlConfig = {
     user: process.env[user],
     password: process.env[pwd],

@@ -5,7 +5,7 @@ const dbQuery = require('../../helpers/db.query');
 const { getBcCompanyId, retrieveAccessToken } = require('../../helpers/oauth');
 
 const checkDbConnection = async (userId) => {
-  const query = SELECT Id FROM Users WHERE Id = ${userId};
+  const query = `SELECT Id FROM Users WHERE Id = ${userId}`;
   const result = await dbQuery(query);
   const recordSet = result?.recordSet;
   const error = result?.message;
@@ -13,11 +13,12 @@ const checkDbConnection = async (userId) => {
   return error && !recordSet ? { Connected: false, Message: error } : { Connected: true };
 }
 
+// This is only used with the missing-ERP items in BC, which is currently hidden.
 const getAllActiveItems = async (daysBack, markets) => {
-  let query = SELECT DISTINCT ItemCode, Country FROM OrderDetails od JOIN Orders o on od.OrderID = o.OrderID WHERE o.CreatedDate >= DATEADD(DAY, -${daysBack}, GETDATE()) AND o.IsRma = 0 AND od.ItemCode != 'Promo' AND o.Country in (, result, recordSet, error;
+  let query = `SELECT DISTINCT ItemCode, Country FROM OrderDetails od JOIN Orders o on od.OrderID = o.OrderID WHERE o.CreatedDate >= DATEADD(DAY, -${daysBack}, GETDATE()) AND o.IsRma = 0 AND od.ItemCode != 'Promo' AND o.Country in (`, result, recordSet, error;
   markets.forEach((market, idx) => {
-    if (markets.length === 1 || idx === markets.length - 1) query += '${market}'); // Only one item in the array or the last item.
-    else query += '${market}', // All items but the last when there's more than one item in the array.
+    if (markets.length === 1 || idx === markets.length - 1) query += `'${market}')`; // Only one item in the array or the last item.
+    else query += `'${market}',` // All items but the last when there's more than one item in the array.
   });
 
   result = await dbQuery(query, 'CRM');
@@ -46,11 +47,11 @@ const getAllErpItems = async (itemCodes, markets, user, env) => {
   let items = [], error;
   for await (let bcCompany of bcCompanies) {
     const market = bcCompany.IsoCountryCode;
-    let url = https://api.businesscentral.dynamics.com/v2.0/${companyId}/${env ? env : bcEnv}/api/v2.0/companies(${bcCompany.ErpCompanyId})/items?$filter=;
+    let url = `https://api.businesscentral.dynamics.com/v2.0/${companyId}/${env ? env : bcEnv}/api/v2.0/companies(${bcCompany.ErpCompanyId})/items?$filter=`;
 
     if (Array.isArray(itemCodes)) {
       itemCodes.forEach(code => {
-        if (code.Country.toLowerCase() === market.toLowerCase()) url += number eq '${code.ItemCode}' or ;
+        if (code.Country.toLowerCase() === market.toLowerCase()) url += `number eq '${code.ItemCode}' or `;
       });
     }
 
@@ -64,7 +65,7 @@ const getAllErpItems = async (itemCodes, markets, user, env) => {
       method: 'get',
       maxBodyLength: Infinity,
       url,
-      headers: { 'Authorization': Bearer ${token} },
+      headers: { 'Authorization': `Bearer ${token}` },
       // params: {}
     };
 
@@ -87,7 +88,7 @@ const getAllErpItems = async (itemCodes, markets, user, env) => {
             }
           }
         } else {
-          console.log('res.data isn\'t defined: ', {res});
+          console.error('res.data isn\'t defined: ', {res});
         }
       },
       err => { error = err.code; }

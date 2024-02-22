@@ -102,6 +102,6 @@ module.exports = {
   server: app,
   start: port => {
     if (!port) throw new Error('The port is missing.');
-    app.listen(port, () => console.log(Running GraphQL Server on port ${port}.));
+    app.listen(port, () => console.log(`Running GraphQL Server on port ${port}.`));
   }
 };

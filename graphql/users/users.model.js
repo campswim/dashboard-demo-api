@@ -14,7 +14,7 @@ const getUserRoles = async () => {
 };
 
 const getUserRestrictionsByRole = async (role) => {
-  const query = SELECT * FROM Roles WHERE Id = ${role};
+  const query = `SELECT * FROM Roles WHERE Id = ${role}`;
   const { recordSet } = await dbQuery(query);
   return recordSet;
 }
@@ -28,20 +28,33 @@ const getAllUsers = async () => {
 
 const getUserById = async (id) => {
   if (!id) return { Error: 'No user ID was provided.' };
-  const query = SELECT u.Id, Email, Name, r.Roles as Role, DateRegistered, LastLogin, LoggedIn, FailedAttempts FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = ${id};
+  const query = `SELECT u.Id, Email, Name, r.Role as Role, DateRegistered, LastLogin, LoggedIn, FailedAttempts FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = ${id}`;
   const { recordSet } = await dbQuery(query);
   
   return recordSet;
 };
 
+const getUsersByIds = async (idArray) => {
+  if (!idArray) return { Error: 'No user ID was provided.' };
+  
+  // Changed the strings into integers.
+  const idIntArray = idArray.map(val => parseInt(val));
+  const idString = idArray.join(',');
+  const query = `SELECT u.Id, Email, Name, r.Role as Role, DateRegistered, LastLogin, LoggedIn, FailedAttempts FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id in (${idString})`;  
+  const { recordSet } = await dbQuery(query);
+    
+  return recordSet;
+};
+
+
 const getUserByEmail = async (email) => {
-  const query = SELECT u.Id, Name, Email, r.Role as Role, u.Role as RoleId, DateRegistered, LastLogin, LoggedIn, FailedAttempts, Active FROM Users u JOIN Roles r ON u.Role = r.Id WHERE Email = '${email}';
+  const query = `SELECT u.Id, Name, Email, r.Role as Role, u.Role as RoleId, DateRegistered, LastLogin, LoggedIn, FailedAttempts, Active FROM Users u JOIN Roles r ON u.Role = r.Id WHERE Email = '${email}'`;
   const { recordSet } = await dbQuery(query);  
   return recordSet;
 };
 
 const getMe = async (id) => {
-  const query = SELECT * FROM Users WHERE Id = ${id};
+  const query = `SELECT * FROM Users WHERE Id = ${id}`;
   const { recordSet } = await dbQuery(query);
   return recordSet;
 };
@@ -51,7 +64,7 @@ const deleteUser = async (ids) => {
   if (!Array.isArray(ids)) return { Error: 'The ID(s) provided to the delete function were not in the form of an array.' }
 
   const idString = ids.join(',');
-  const query = UPDATE Users SET Active = 0 OUTPUT DELETED.Id WHERE Id in (${idString});
+  const query = `UPDATE Users SET Active = 0 OUTPUT DELETED.Id WHERE Id in (${idString})`;
   const { recordSet } = await dbQuery(query);
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 };
@@ -61,31 +74,33 @@ const signup = async ({ email, usersName, password, role }) => {
 
   const salt = bcrypt.genSaltSync(12);
   const hash = bcrypt.hashSync(password, salt);
-  const dateRegistered = new Date().toISOString();
+  // const dateRegistered = new Date().toISOString(); // Sends UTC, and we want local time.
+  const dateRegistered = 'GETDATE()';
   const user = await getUserByEmail(email);
   const haveEmail = user?.Email === email ? true : false;
   const activeUser = user?.Active;
   let query, error, recordSet, name, message;
 
   if (haveEmail) {
-    if (!activeUser) query = UPDATE Users SET Name = '${usersName}', Hash = '${hash}', Role = '${role}', LastLogin = NULL, Active = 1 OUTPUT INSERTED.* WHERE Id = ${user.Id};
-    else error = The email address ${email} has already been registered to another user. If this is your email address, please sign in.;
+    if (!activeUser) query = `UPDATE Users SET Name = '${usersName}', Hash = '${hash}', Role = '${role}', LastLogin = NULL, Active = 1 OUTPUT INSERTED.* WHERE Id = ${user.Id}`;
+    else error = `The email address ${email} has already been registered to another user. If this is your email address, please sign in.`;
   } else {
-    query = INSERT INTO Users (Email, Name, Hash, Role, DateRegistered, Active) OUTPUT INSERTED.* VALUES ('${email}', '${usersName}', '${hash}', ${role}, '${dateRegistered}', 1);
+    query = `INSERT INTO Users (Email, Name, Hash, Role, DateRegistered, Active) OUTPUT INSERTED.* VALUES ('${email}', '${usersName}', '${hash}', ${role}, ${dateRegistered}, 1)`;
   }
   
   if (query) ({ recordSet, name, message } = await dbQuery(query));
   else if (error) return { Error: error };
 
-  if (recordSet && haveEmail && !activeUser) recordSet.Message = The user's account, associated with email address ${email}, has been reactivated with a new password.;
+  if (recordSet && haveEmail && !activeUser) recordSet.Message = `The user's account, associated with email address ${email}, has been reactivated with a new password.`;
   
   return name ? { Error: message } : recordSet;
 }; 
 
 const signin = async ({ id, password }, secret, res) => {
-  const user = await dbQuery(SELECT u.Id, Name, r.Role, r.Id as RoleId, Hash FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = '${id}');
-  const date = new Date().toISOString();
-  const query = user.recordSet ? UPDATE Users SET LastLogin = '${date}', LoggedIn = 1 OUTPUT INSERTED.LastLogin WHERE Id = ${user.recordSet.Id} : '';
+  const user = await dbQuery(`SELECT u.Id, Name, r.Role, r.Id as RoleId, Hash FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = '${id}'`);
+  // const date = new Date().toISOString(); // Sets UTC, but need local time.
+  const date = 'GETDATE()';
+  const query = user.recordSet ? `UPDATE Users SET LastLogin = ${date}, LoggedIn = 1 OUTPUT INSERTED.LastLogin WHERE Id = ${user.recordSet.Id}` : '';
   let error = user && user.message ? user.message : '';
   const recordSet = user && user.recordSet ? user.recordSet : '';
   let validPassword = false, token;
@@ -120,7 +135,7 @@ const signin = async ({ id, password }, secret, res) => {
       // secure: process.env.NODE_ENV === 'production',
       secure: false,
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
       path: '/',
     });          
     
@@ -150,7 +165,7 @@ const signout = async (user, res) => {
   res.setHeader('Set-Cookie', serialized);
 
   // Set LoggedIn to 0.
-  const query = UPDATE Users SET LoggedIn = 0 OUTPUT INSERTED.Name WHERE Id = ${user.id};
+  const query = `UPDATE Users SET LoggedIn = 0 OUTPUT INSERTED.Name WHERE Id = ${user.id}`;
   let { recordSet, message } = await dbQuery(query);
 
   if (Array.isArray(recordSet) && recordSet.length === 0 && !message) {
@@ -165,7 +180,7 @@ const changePassword = async (id, password, firstSignin = false, secret, res) =>
   if (!id || !password) return { Error: 'No ID or password was provided to the changePassword function.' };
   if (firstSignin) { // The user is required to change her password upon first signing in.
     // Check that the user-entered password matches that assigned by the administrator in the db.
-    const hash = await dbQuery(SELECT Hash FROM Users WHERE Id = ${id});
+    const hash = await dbQuery(`SELECT Hash FROM Users WHERE Id = ${id}`);
     const recordSet = hash?.recordSet;
     let error = hash?.message;
     let validPassword = false;
@@ -179,7 +194,7 @@ const changePassword = async (id, password, firstSignin = false, secret, res) =>
     // Update the password.
     const salt = bcrypt.genSaltSync(12);
     const hash = bcrypt.hashSync(password, salt);
-    const query = UPDATE Users SET Hash = '${hash}' OUTPUT INSERTED.Id WHERE Id = ${id};
+    const query = `UPDATE Users SET Hash = '${hash}' OUTPUT INSERTED.Id WHERE Id = ${id}`;
     const { recordSet, error } = await dbQuery(query);
 
     if (!error) {
@@ -190,8 +205,8 @@ const changePassword = async (id, password, firstSignin = false, secret, res) =>
 
 const updateUser = async ({ id, column, newValue }) => {
   const rowId = 'Role' === column ? parseInt(newValue) : '';
-  let query = UPDATE Users SET ${column} = '${newValue}' OUTPUT INSERTED.${column} WHERE Id = ${id};
-  if (rowId && !isNaN(rowId)) query = UPDATE Users SET ${column} = ${rowId} OUTPUT INSERTED.${column} WHERE Id = ${id};
+  let query = `UPDATE Users SET ${column} = '${newValue}' OUTPUT INSERTED.${column} WHERE Id = ${id}`;
+  if (rowId && !isNaN(rowId)) query = `UPDATE Users SET ${column} = ${rowId} OUTPUT INSERTED.${column} WHERE Id = ${id}`;
     
   const { recordSet, name, message } = await dbQuery(query);
   return name ? { Error: message } : recordSet;
@@ -202,6 +217,7 @@ module.exports = {
   getUserRestrictionsByRole,
   getAllUsers,
   getUserById,
+  getUsersByIds,
   getUserByEmail,
   getMe,
   deleteUser,

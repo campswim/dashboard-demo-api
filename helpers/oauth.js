@@ -4,7 +4,7 @@ const dbQuery = require('./db.query');
 const { encrypt, decrypt } = require('./encrypt-decrypt');
 
 async function getAuthConfig() {
-  const query = SELECT Name, Value FROM AppParams WHERE Name in ('BcAadTenantId', 'BcClientId', 'BcClientSecret', 'BcScope', 'BcEnvironment');
+  const query = `SELECT Name, Value FROM AppParams WHERE Name in ('BcAadTenantId', 'BcClientId', 'BcClientSecret', 'BcScope', 'BcEnvironment')`;
   const results = await dbQuery(query);  
   const authConfig = {};
 
@@ -24,8 +24,8 @@ async function getAuthConfig() {
 async function getBcCompanyId(markets) {
   let query = 'SELECT DISTINCT IsoCountryCode, ErpCompanyId FROM Maps WHERE IsoCountryCode in (';
   markets.forEach((market, idx) => {
-    if (markets.length === 1 || idx === markets.length - 1) query += '${market}');
-    else query += '${market}',;
+    if (markets.length === 1 || idx === markets.length - 1) query += `'${market}')`;
+    else query += `'${market}',`;
   });
 
   const { recordSet } = await dbQuery(query);
@@ -40,7 +40,7 @@ async function getNewAccessToken(user, oldToken = null) {
   const scope = authConfig?.BcScope;
   const companyId = authConfig?.BcAadTenantId;
   const bcEnv = authConfig?.BcEnvironment;
-  const tokenUrl = https://login.microsoftonline.com/${companyId}/oauth2/v2.0/token;
+  const tokenUrl = `https://login.microsoftonline.com/${companyId}/oauth2/v2.0/token`;
   const params = {
     client_id: clientId,
     scope,
@@ -59,7 +59,7 @@ async function getNewAccessToken(user, oldToken = null) {
         const today = new Date().toISOString();
         const encryptedToken = encrypt(token);
         const expiration = now + (expiresIn * 1000);
-        const query = !oldToken ? INSERT INTO AppParams (Name, Value, ProcessJobIds, Category, SubCategory, ValueTypeId, Notes, EnabledDate, CreatedBy) OUTPUT INSERTED.Name VALUES ('BcAccessToken', '${JSON.stringify(encryptedToken)}', '200,201,210,211,212', 'Order', 'API', 10, '${expiration}', '${today}', '${user}') : UPDATE AppParams SET Value = '${JSON.stringify(encryptedToken)}', Notes = '${expiration}' OUTPUT INSERTED.Name WHERE Name = 'BcAccessToken';
+        const query = !oldToken ? `INSERT INTO AppParams (Name, Value, ProcessJobIds, Category, SubCategory, ValueTypeId, Notes, EnabledDate, CreatedBy) OUTPUT INSERTED.Name VALUES ('BcAccessToken', '${JSON.stringify(encryptedToken)}', '200,201,210,211,212', 'Order', 'API', 10, '${expiration}', '${today}', '${user}')` : `UPDATE AppParams SET Value = '${JSON.stringify(encryptedToken)}', Notes = '${expiration}' OUTPUT INSERTED.Name WHERE Name = 'BcAccessToken'`;
 
         return dbQuery(query).then(
           res => { 
