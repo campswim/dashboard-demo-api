@@ -1,18 +1,4 @@
-USE sql3684435
-;
-CREATE TABLE PaymentsTrackingHistory(
-	PaymentId BIGINT NOT NULL,
-	DismissedAt datetime NULL,
-	ErrorReason varchar(200) NULL,
-	AttemptedAt datetime NOT NULL,
-	RetiredAt datetime NOT NULL
-)
-;
-CREATE INDEX ix_PaymentsTrackingHistory ON PaymentsTrackingHistory
-(
-	RetiredAt ASC,
-	AttemptedAt ASC
-)
+USE campswim_StagingHub
 ;
 
 CREATE TABLE PaymentsTracking(
@@ -24,12 +10,7 @@ CREATE TABLE PaymentsTracking(
  CONSTRAINT PK_Payments_PaymentId PRIMARY KEY 
 (
 	PaymentId ASC
-),
-	PERIOD FOR SYSTEM_TIME (AttemptedAt, RetiredAt)
 )
-WITH
-(
-SYSTEM_VERSIONING = ON ( HISTORY_TABLE = PaymentsTrackingHistory )
 )
 ;
 CREATE TABLE Addresses(
@@ -677,5 +658,5 @@ ALTER TABLE ProcessingErrors ENABLE TRIGGER trg_DismissPaymentTrackingWhenProces
 ;
 USE master
 ;
-ALTER DATABASE sql3684435 SET  READ_WRITE 
+ALTER DATABASE campswim_StagingHub SET  READ_WRITE 
 ;
