@@ -3,7 +3,7 @@
 const dbQuery = require('../../helpers/db.query');
 
 const getAllProcessingErrors = async () => {
-  const query = `Select
+  const query = Select
       pe.Id,
       pe.ProcessJobId,
       pj.Name,
@@ -18,7 +18,7 @@ const getAllProcessingErrors = async () => {
       pe.AdditionalData
     FROM ProcessingErrors pe
     JOIN ProcessJobs pj ON pe.ProcessJobId = pj.Id
-  `;
+  ;
   const { recordSet } = await dbQuery(query);  
   return recordSet;
 };

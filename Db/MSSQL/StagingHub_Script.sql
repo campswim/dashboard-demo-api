@@ -82,11 +82,11 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[PaymentsTrackingHistory](
-	[PaymentId] [bigint] NOT NULL,
-	[DismissedAt] [datetime2](0) NULL,
+	[PaymentId] [BIGINT] NOT NULL,
+	[DismissedAt] [datetime](0) NULL,
 	[ErrorReason] [varchar](200) NULL,
-	[AttemptedAt] [datetime2](7) NOT NULL,
-	[RetiredAt] [datetime2](7) NOT NULL
+	[AttemptedAt] [datetime](7) NOT NULL,
+	[RetiredAt] [datetime](7) NOT NULL
 ) ON [PRIMARY]
 GO
 /****** Object:  Index [ix_PaymentsTrackingHistory]    Script Date: 9/30/2023 12:10:04 AM ******/
@@ -102,11 +102,11 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[PaymentsTracking](
-	[PaymentId] [bigint] NOT NULL,
-	[DismissedAt] [datetime2](0) NULL,
+	[PaymentId] [BIGINT] NOT NULL,
+	[DismissedAt] [datetime](0) NULL,
 	[ErrorReason] [varchar](200) NULL,
-	[AttemptedAt] [datetime2](7) GENERATED ALWAYS AS ROW START NOT NULL,
-	[RetiredAt] [datetime2](7) GENERATED ALWAYS AS ROW END NOT NULL,
+	[AttemptedAt] [datetime](7) GENERATED ALWAYS AS ROW START NOT NULL,
+	[RetiredAt] [datetime](7) GENERATED ALWAYS AS ROW END NOT NULL,
  CONSTRAINT [PK_Payments_PaymentId] PRIMARY KEY CLUSTERED 
 (
 	[PaymentId] ASC
@@ -124,7 +124,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Addresses](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[AddressLine1] [varchar](61) NOT NULL,
 	[AddressLine2] [varchar](61) NULL,
 	[AddressLine3] [varchar](61) NULL,
@@ -151,10 +151,10 @@ CREATE TABLE [dbo].[AppParams](
 	[SubCategory] [varchar](50) NULL,
 	[ValueTypeId] [int] NOT NULL,
 	[Notes] [varchar](200) NULL,
-	[EnabledDate] [datetime2](0) NULL,
-	[CreatedAt] [datetime2](2) NOT NULL,
+	[EnabledDate] [datetime](0) NULL,
+	[CreatedAt] [datetime](2) NOT NULL,
 	[CreatedBy] [varchar](25) NOT NULL,
-	[ModifiedAt] [datetime2](3) NULL,
+	[ModifiedAt] [datetime](3) NULL,
 	[ModifiedBy] [varchar](25) NULL,
  CONSTRAINT [PK_AppParams] PRIMARY KEY CLUSTERED 
 (
@@ -182,9 +182,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[CanadaFileTracking](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[OrderNumber] [varchar](21) NOT NULL,
-	[At] [datetime2](7) NOT NULL,
+	[At] [datetime](7) NOT NULL,
 	[Filename] [varchar](50) NOT NULL,
  CONSTRAINT [PK_CanadaFileTracking] PRIMARY KEY CLUSTERED 
 (
@@ -226,10 +226,10 @@ CREATE TABLE [dbo].[Customers](
 	[Phone2] [varchar](21) NULL,
 	[Phone3] [varchar](21) NULL,
 	[EmailAddress] [varchar](80) NULL,
-	[EnteredDate] [datetime2](0) NULL,
-	[BillAddressId] [bigint] NULL,
-	[ShipAddressId] [bigint] NULL,
-	[ImportedDate] [datetime2](2) NULL,
+	[EnteredDate] [datetime](0) NULL,
+	[BillAddressId] [BIGINT] NULL,
+	[ShipAddressId] [BIGINT] NULL,
+	[ImportedDate] [datetime](2) NULL,
 	[TaxId] [varchar](30) NULL,
 	[TaxIdType] [varchar](50) NULL,
  CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED 
@@ -259,7 +259,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[ErpReturnOrderLines](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[ErpId] [varchar](40) NULL,
 	[ErpHeaderId] [varchar](40) NOT NULL,
 	[OrderNumber] [varchar](20) NOT NULL,
@@ -286,9 +286,9 @@ CREATE TABLE [dbo].[ErpReturnOrders](
 	[ErpId] [varchar](40) NOT NULL,
 	[OrderNumber] [varchar](20) NOT NULL,
 	[CustomerNumber] [varchar](15) NOT NULL,
-	[CreatedDate] [datetime2](7) NOT NULL,
-	[OrderDate] [datetime2](0) NOT NULL,
-	[ShipDate] [datetime2](0) NOT NULL,
+	[CreatedDate] [datetime](7) NOT NULL,
+	[OrderDate] [datetime](0) NOT NULL,
+	[ShipDate] [datetime](0) NOT NULL,
 	[CustomerName] [varchar](35) NULL,
 	[Address] [varchar](35) NULL,
 	[Address2] [varchar](35) NULL,
@@ -300,8 +300,8 @@ CREATE TABLE [dbo].[ErpReturnOrders](
 	[Email] [varchar](50) NULL,
 	[Warehouse] [varchar](25) NOT NULL,
 	[OriginalOrderNumber] [int] NOT NULL,
-	[ImportedAt] [datetime2](2) NOT NULL,
-	[SentToCrmAt] [datetime2](2) NULL,
+	[ImportedAt] [datetime](2) NOT NULL,
+	[SentToCrmAt] [datetime](2) NULL,
 	[CrmOrderId] [int] NULL,
  CONSTRAINT [PK_ReturnOrders_ErpId] PRIMARY KEY CLUSTERED 
 (
@@ -315,10 +315,10 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[ErpShipmentTracking](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[ErpPostedPackageId] [varchar](40) NOT NULL,
 	[ErpOrderNumber] [varchar](25) NOT NULL,
-	[When] [datetime2](7) NOT NULL,
+	[When] [datetime](7) NOT NULL,
  CONSTRAINT [unique_ErpPostedPkgId] UNIQUE NONCLUSTERED 
 (
 	[ErpPostedPackageId] ASC
@@ -331,7 +331,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Logging](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[Level] [varchar](max) NULL,
 	[TimeStamp] [datetime] NULL,
 	[Message] [varchar](max) NULL,
@@ -363,11 +363,11 @@ CREATE TABLE [dbo].[Maps](
 	[IsVAT] [bit] NULL,
 	[UseForErpPull] [bit] NULL,
 	[ProcessingSequence] [smallint] NULL,
-	[ActivatedAt] [datetime2](0) NULL,
-	[DeactivatedAt] [datetime2](0) NULL,
-	[CreatedAt] [datetime2](3) NOT NULL,
+	[ActivatedAt] [datetime](0) NULL,
+	[DeactivatedAt] [datetime](0) NULL,
+	[CreatedAt] [datetime](3) NOT NULL,
 	[CreatedBy] [varchar](25) NOT NULL,
-	[ModifiedAt] [datetime2](3) NULL,
+	[ModifiedAt] [datetime](3) NULL,
 	[ModifiedBy] [varchar](25) NULL,
  CONSTRAINT [PK_Maps] PRIMARY KEY CLUSTERED 
 (
@@ -381,13 +381,13 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[OrderBatch](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[DailyBatchNumber] [int] NOT NULL,
-	[BatchDate] [datetime2](0) NOT NULL,
+	[BatchDate] [datetime](0) NOT NULL,
 	[Market] [varchar](10) NOT NULL,
 	[SelectedOrderCount] [int] NOT NULL,
 	[ProcessedOrderCount] [int] NULL,
-	[CreatedAt] [datetime2](3) NOT NULL,
+	[CreatedAt] [datetime](3) NOT NULL,
 	[BatchMonth] [int] NULL,
 	[OrderBatchSize] [int] NULL,
  CONSTRAINT [PK_OrderBatch_OrderBatchId] PRIMARY KEY CLUSTERED 
@@ -402,8 +402,8 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[OrderBatchDetail](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
-	[OrderBatchId] [bigint] NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
+	[OrderBatchId] [BIGINT] NOT NULL,
 	[OrderNumber] [varchar](21) NOT NULL,
 	[ErrorCode] [varchar](50) NULL,
 	[ErrorMessage] [varchar](2000) NULL,
@@ -419,7 +419,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Orderlines](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[OrderNumber] [varchar](21) NOT NULL,
 	[LineNumber] [int] NULL,
 	[Sku] [varchar](31) NOT NULL,
@@ -453,8 +453,8 @@ CREATE TABLE [dbo].[Orders](
 	[CustomerNumber] [varchar](15) NOT NULL,
 	[Market] [varchar](10) NOT NULL,
 	[CurrencyCode] [varchar](10) NOT NULL,
-	[CreatedDate] [datetime2](7) NOT NULL,
-	[OrderDate] [datetime2](0) NOT NULL,
+	[CreatedDate] [datetime](7) NOT NULL,
+	[OrderDate] [datetime](0) NOT NULL,
 	[Warehouse] [varchar](25) NULL,
 	[PushStatusId] [int] NULL,
 	[ShipToName] [varchar](65) NULL,
@@ -470,16 +470,16 @@ CREATE TABLE [dbo].[Orders](
 	[Phone1] [varchar](21) NULL,
 	[Phone2] [varchar](21) NULL,
 	[Phone3] [varchar](21) NULL,
-	[BillAddressId] [bigint] NULL,
-	[ShipAddressId] [bigint] NULL,
-	[StagingImportDate] [datetime2](4) NOT NULL,
+	[BillAddressId] [BIGINT] NULL,
+	[ShipAddressId] [BIGINT] NULL,
+	[StagingImportDate] [datetime](4) NOT NULL,
 	[PickupName] [varchar](100) NULL,
 	[OrderTypeDescription] [varchar](20) NULL,
 	[ReferenceOrderNumber] [varchar](21) NULL,
 	[ErpOrderNumber] [varchar](25) NULL,
 	[ErpId] [varchar](40) NULL,
-	[SentToErp] [datetime2](2) NULL,
-	[SentTo3PL] [datetime2](2) NULL,
+	[SentToErp] [datetime](2) NULL,
+	[SentTo3PL] [datetime](2) NULL,
  CONSTRAINT [PK_orders_OrderNumber] PRIMARY KEY CLUSTERED 
 (
 	[OrderNumber] ASC
@@ -494,12 +494,12 @@ GO
 CREATE TABLE [dbo].[OrderStagingErrors](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[OrderNumber] [varchar](21) NOT NULL,
-	[OrderDate] [datetime2](0) NOT NULL,
+	[OrderDate] [datetime](0) NOT NULL,
 	[OrderTotal] [decimal](18, 2) NOT NULL,
 	[CurrencyCode] [char](3) NOT NULL,
 	[Message] [varchar](300) NOT NULL,
-	[At] [datetime2](3) NOT NULL,
-	[IgnoredAt] [datetime2](3) NULL,
+	[At] [datetime](3) NOT NULL,
+	[IgnoredAt] [datetime](3) NULL,
 	[Exception] [varchar](max) NULL,
  CONSTRAINT [PK_OrderStagingErrors] PRIMARY KEY CLUSTERED 
 (
@@ -517,15 +517,15 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Payments](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[SourcePaymentId] [varchar](20) NULL,
 	[OrderNumber] [varchar](21) NOT NULL,
 	[PaymentType] [varchar](30) NULL,
 	[PaymentAmount] [decimal](18, 2) NOT NULL,
-	[PaymentDate] [datetime2](0) NOT NULL,
+	[PaymentDate] [datetime](0) NOT NULL,
 	[CardNumber] [varchar](25) NULL,
 	[AuthCode] [varchar](25) NULL,
-	[SentToErp] [datetime2](2) NULL,
+	[SentToErp] [datetime](2) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -538,9 +538,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[ProcessedTransactions](
-	[Id] [bigint] NOT NULL,
-	[OrderDate] [datetime2](0) NULL,
-	[EntryReceiedDate] [datetime2](5) NOT NULL,
+	[Id] [BIGINT] NOT NULL,
+	[OrderDate] [datetime](0) NULL,
+	[EntryReceiedDate] [datetime](5) NOT NULL,
 	[CustomerID] [int] NOT NULL,
 	[LoginName] [varchar](30) NULL,
 	[OrderID] [int] NOT NULL,
@@ -570,7 +570,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[ProcessingErrors](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
 	[ProcessJobId] [int] NOT NULL,
 	[Category] [varchar](20) NULL,
 	[OrderNumber] [varchar](21) NOT NULL,
@@ -578,8 +578,8 @@ CREATE TABLE [dbo].[ProcessingErrors](
 	[AltId] [varchar](12) NULL,
 	[Message] [varchar](300) NOT NULL,
 	[AdditionalData] [varchar](300) NULL,
-	[At] [datetime2](2) NOT NULL,
-	[DismissedAt] [datetime2](2) NULL,
+	[At] [datetime](2) NOT NULL,
+	[DismissedAt] [datetime](2) NULL,
 	[DismissedBy] [varchar](20) NULL,
 	[Exception] [varchar](max) NULL,
  CONSTRAINT [PK_ProcessingErrors_Id] PRIMARY KEY CLUSTERED 
@@ -627,7 +627,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[PurgeRuns](
 	[PurgeRunId] [int] IDENTITY(1,1) NOT NULL,
-	[RunDate] [datetime2](2) NOT NULL,
+	[RunDate] [datetime](2) NOT NULL,
 	[MonthsKept] [int] NOT NULL,
  CONSTRAINT [PK_PurgeRuns] PRIMARY KEY CLUSTERED 
 (
@@ -671,9 +671,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[ShippedOrderlines](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
-	[OrderlineId] [bigint] NOT NULL,
-	[ShippedAt] [datetime2](3) NOT NULL,
+	[Id] [BIGINT] IDENTITY(1,1) NOT NULL,
+	[OrderlineId] [BIGINT] NOT NULL,
+	[ShippedAt] [datetime](3) NOT NULL,
 	[ShippedQuantity] [int] NOT NULL,
 	[Carrier] [varchar](50) NULL,
 	[ShipMethod] [varchar](50) NULL,
@@ -681,9 +681,9 @@ CREATE TABLE [dbo].[ShippedOrderlines](
 	[LotNumber] [varchar](25) NOT NULL,
 	[ShippedOrderSourceId] [int] NOT NULL,
 	[SourceDocument] [varchar](50) NULL,
-	[CrmNotifiedAt] [datetime2](0) NULL,
-	[ErpNotifiedAt] [datetime2](0) NULL,
-	[CreatedAt] [datetime2](3) NOT NULL,
+	[CrmNotifiedAt] [datetime](0) NULL,
+	[ErpNotifiedAt] [datetime](0) NULL,
+	[CreatedAt] [datetime](3) NOT NULL,
 	[CreatedBy] [varchar](25) NOT NULL,
  CONSTRAINT [[PK_ShippedOrderLines_Id]]] PRIMARY KEY CLUSTERED 
 (
@@ -716,8 +716,8 @@ CREATE TABLE [dbo].[Users](
 	[Name] [varchar](100) NOT NULL,
 	[Hash] [varchar](max) NOT NULL,
 	[Role] [tinyint] NOT NULL,
-	[DateRegistered] [datetime2](2) NOT NULL,
-	[LastLogin] [datetime2](2) NULL,
+	[DateRegistered] [datetime](2) NOT NULL,
+	[LastLogin] [datetime](2) NULL,
 	[LoggedIn] [bit] NULL,
 	[FailedAttempts] [tinyint] NULL,
 	[Active] [bit] NULL,

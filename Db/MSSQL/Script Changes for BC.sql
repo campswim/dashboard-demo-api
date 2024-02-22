@@ -45,7 +45,7 @@ IF NOT EXISTS (SELECT * FROM sys.columns
   WHERE  object_id = OBJECT_ID(N'[dbo].[Orders]') AND name = 'SentTo3PLAt'
 )
 BEGIN
-    ALTER TABLE [dbo].[Orders] ADD [SentTo3PLAt] [datetime2](2) NULL
+    ALTER TABLE [dbo].[Orders] ADD [SentTo3PLAt] [datetime](2) NULL
 END
 
 ALTER TABLE dbo.Orders ALTER column ShipMethod VARCHAR(50) NULL
@@ -135,16 +135,16 @@ CREATE TABLE dbo.ShippedOrderSources
 
 CREATE TABLE dbo.ShippedOrderlines
 (
-	Id bigint primary key identity(1,1),
-	OrderlineId bigint NOT NULL,
-	ShippedAt DATETIME2(0) NOT NULL,
+	Id BIGINT primary key identity(1,1),
+	OrderlineId BIGINT NOT NULL,
+	ShippedAt datetime(0) NOT NULL,
 	ShippedQuantity int NOT NULL,
 	LotNumber varchar(25) NOT NULL,
 	ShippedOrderSourceId int not NULL,
 	SourceDocument varchar(50),
-	BcNotifiedAt DATETIME2(0),
-	ExigoNotifiedAt DATETIME2(0),
-	CreatedAt DATETIME2(2) NOT NULL,
+	BcNotifiedAt datetime(0),
+	ExigoNotifiedAt datetime(0),
+	CreatedAt datetime(2) NOT NULL,
 	CreatedBy varchar(25) NOT NULL
 )
 ALTER TABLE dbo.ShippedOrderlines
@@ -159,10 +159,10 @@ GO
 
 CREATE TABLE dbo.PaymentsToErpSendFails
 (
-	Id bigint primary key identity(1,1),
-	PaymentId bigint NOT NULL,
-	AttemptedAt DATETIME2(2) NOT NULL,
-	DismissedAt DATETIME2(2) NULL,
+	Id BIGINT primary key identity(1,1),
+	PaymentId BIGINT NOT NULL,
+	AttemptedAt datetime(2) NOT NULL,
+	DismissedAt datetime(2) NULL,
 	ErrorMessage VARCHAR(200) NULL--?? DO I WANT THIS AS NULLable ??
 )
 ALTER TABLE dbo.PaymentsToErpSendFails

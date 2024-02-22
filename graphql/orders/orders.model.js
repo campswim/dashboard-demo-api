@@ -24,7 +24,7 @@ const getAllUnpushedOrders = async () => {
 }
 
 const getAllFailedStagedPushes = async () => {
-  const query = `SELECT
+  const query = SELECT
       o.OrderNumber,
       o.CustomerNumber,
       o.Market,
@@ -48,7 +48,7 @@ const getAllFailedStagedPushes = async () => {
       AND bd.ErrorMessage IS NOT null
       AND b.BatchDate between DateAdd(DD,-30,GETDATE()) and GETDATE()
       AND bd2.id IS NULL
-  `;
+  ;
   try {
     const { recordSet } = await dbQuery(query);
     return recordSet;
@@ -59,13 +59,13 @@ const getAllFailedStagedPushes = async () => {
 
 const getFailedPullOrderById = async (ids) => {
   const idsString = ids.join(',');
-  const query = `SELECT * FROM OrderStagingErrors where OrderNumber in (${idsString})`;
+  const query = SELECT * FROM OrderStagingErrors where OrderNumber in (${idsString});
   const { recordSet } = await dbQuery(query);
   return recordSet;
 }
 
 const getAllIgnoredOrders = async (userId) => {
-  const userEmail = await dbQuery(`SELECT Email from Users WHERE Id = ${userId}`);
+  const userEmail = await dbQuery(SELECT Email from Users WHERE Id = ${userId});
   const queryIgnoredCrmOrders = 'SELECT OrderNumber, OrderDate, OrderTotal, CurrencyCode, IgnoredAt, Message FROM OrderStagingErrors WHERE IgnoredAt IS NOT NULL';
   const queryIgnoredErpOrders = 'SELECT DISTINCT o.OrderNumber, o.CurrencyCode, o.OrderDate, o.OrderTotalAmount, bd.ErrorMessage FROM Orders o JOIN OrderBatchDetail bd ON o.OrderNumber = bd.OrderNumber LEFT OUTER JOIN OrderBatchDetail bd2 ON (o.OrderNumber = bd2.OrderNumber AND bd.id < bd2.id) WHERE PushStatusId = 3';
   const crmResult = await dbQuery(queryIgnoredCrmOrders);
@@ -143,35 +143,35 @@ const getAllIgnoredOrders = async (userId) => {
 
 const repullCrmOrders = async (ids) => {
   const idsString = ids.join(',');
-  const query = `DELETE FROM OrderStagingErrors OUTPUT DELETED.* WHERE OrderNumber in (${idsString})`;
+  const query = DELETE FROM OrderStagingErrors OUTPUT DELETED.* WHERE OrderNumber in (${idsString});
   const { recordSet } = await dbQuery(query);
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
 const ignoreCrmOrders = async (ids) => {
   const idsString = ids.join(',');
-  const query = `UPDATE OrderStagingErrors SET IgnoredAt = GETDATE() OUTPUT INSERTED.* WHERE OrderNumber in (${idsString})`;
+  const query = UPDATE OrderStagingErrors SET IgnoredAt = GETDATE() OUTPUT INSERTED.* WHERE OrderNumber in (${idsString});
   const { recordSet } = await dbQuery(query);
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
 const repushFailedStagedOrders = async (ids) => {
   const idsString = ids.join(',');
-  const query = `UPDATE Orders SET PushStatusId = NULL OUTPUT INSERTED.* WHERE OrderNumber in (${idsString})`;
+  const query = UPDATE Orders SET PushStatusId = NULL OUTPUT INSERTED.* WHERE OrderNumber in (${idsString});
   const { recordSet } = await dbQuery(query);
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
 const ignoreFailedStagedOrders = async (ids) => {
   const idsString = ids.join(',');
-  const query = `UPDATE Orders SET PushStatusId = 3 OUTPUT INSERTED.* WHERE OrderNumber in (${idsString})`;
+  const query = UPDATE Orders SET PushStatusId = 3 OUTPUT INSERTED.* WHERE OrderNumber in (${idsString});
   const { recordSet } = await dbQuery(query);
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
 const deleteFailedStagedOrder = async (ids) => {
   const idsString = ids.join(',');
-  const query = `DELETE FROM Orders OUTPUT DELETED.OrderNumber WHERE OrderNumber in (${idsString})`;
+  const query = DELETE FROM Orders OUTPUT DELETED.OrderNumber WHERE OrderNumber in (${idsString});
   const { recordSet } = await dbQuery(query);
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
@@ -186,8 +186,8 @@ const unignoreIgnoredOrders = async (ids) => {
     if ('CRM' === key) crmIds.push(id[key]);
     else if ('ERP' === key) erpIds.push(id[key]);
   });
-  const crmQuery = `UPDATE OrderStagingErrors SET IgnoredAt = NULL OUTPUT INSERTED.OrderNumber WHERE OrderNumber in (${crmIds})`;
-  const erpQuery = `UPDATE Orders SET PushStatusId = 2 OUTPUT INSERTED.OrderNumber WHERE OrderNumber in (${erpIds})`;
+  const crmQuery = UPDATE OrderStagingErrors SET IgnoredAt = NULL OUTPUT INSERTED.OrderNumber WHERE OrderNumber in (${crmIds});
+  const erpQuery = UPDATE Orders SET PushStatusId = 2 OUTPUT INSERTED.OrderNumber WHERE OrderNumber in (${erpIds});
   const crmResult = crmIds.length > 0 ? await dbQuery(crmQuery) : '';
   const erpResult = erpIds.length > 0 ? await dbQuery(erpQuery) : '';
   const combinedReturn = [];
