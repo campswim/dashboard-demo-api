@@ -2,6 +2,11 @@ type Query {
   getAllProcessingErrors: [Job]
 }
 
+type Mutation {
+  dismissJobError(ids: [ID]!): [Job]
+  reinstateJobError(ids: [ID]!): [Job]
+}
+
 type Job {
   Id: ID!
   Name: String!
@@ -15,5 +20,7 @@ type Job {
   Message: String!
   Exception: String
   AdditionalData: String
+  DismissedAt: String
+  DismissedBy: String
   Error: String
 }

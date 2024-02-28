@@ -1,3 +1,5 @@
+delete from PushStatuses;
+
 insert into PushStatuses (Id, Name) values (1, 'Sent');
 insert into PushStatuses (Id, Name) values (2, 'Failed');
 insert into PushStatuses (Id, Name) values (3, 'Ignored');

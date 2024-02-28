@@ -3,7 +3,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
-const dbQuery = require('../../helpers/db.query');
+const dbQuery = require('../../helpers/db_query');
 const validateEmail = require('../../helpers/validate-email');
 require('dotenv').config({ path: __dirname + '/../../../.env' });
 
@@ -15,8 +15,7 @@ const getUserRoles = async () => {
 
 const getUserRestrictionsByRole = async (role) => {
   const query = `SELECT * FROM Roles WHERE Id = ${role}`;
-  const { recordSet } = await dbQuery(query);
-  return recordSet;
+  return await dbQuery(query);
 }
 
 const getAllUsers = async () => {
@@ -46,10 +45,9 @@ const getUsersByIds = async (idArray) => {
   return recordSet;
 };
 
-
-const getUserByEmail = async (email) => {
+const getUserByEmail = async (email) => {  
   const query = `SELECT u.Id, Name, Email, r.Role as Role, u.Role as RoleId, DateRegistered, LastLogin, LoggedIn, FailedAttempts, Active FROM Users u JOIN Roles r ON u.Role = r.Id WHERE Email = '${email}'`;
-  const { recordSet } = await dbQuery(query);  
+  const recordSet = await dbQuery(query);
   return recordSet;
 };
 
@@ -98,25 +96,24 @@ const signup = async ({ email, usersName, password, role }) => {
 
 const signin = async ({ id, password }, secret, res) => {
   const user = await dbQuery(`SELECT u.Id, Name, r.Role, r.Id as RoleId, Hash FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = '${id}'`);
+  const date = new Date().toLocaleString(); // Set local time of client.
   // const date = new Date().toISOString(); // Sets UTC, but need local time.
-  const date = 'GETDATE()';
-  const query = user.recordSet ? `UPDATE Users SET LastLogin = ${date}, LoggedIn = 1 OUTPUT INSERTED.LastLogin WHERE Id = ${user.recordSet.Id}` : '';
-  let error = user && user.message ? user.message : '';
-  const recordSet = user && user.recordSet ? user.recordSet : '';
-  let validPassword = false, token;
+  const dateSQL = 'LOCALTIME()';
+  const query = user ? `UPDATE Users SET LastLogin = ${dateSQL}, LoggedIn = 1 WHERE Id = ${user.Id}` : '';
+  let validPassword = false, token, error;
 
   // Compare the password passed in to the hashed version in the db.
-  if (recordSet) validPassword = bcrypt.compareSync(password, recordSet.Hash);
+  if (user) validPassword = bcrypt.compareSync(password, user.Hash);
   
   // Create the token.
   if (!error) {
     if (validPassword) {
       const payload = {
-        id: recordSet.Id,
-        name: recordSet.Name,
-        role: recordSet.Role
+        id: user.Id,
+        name: user.Name,
+        role: user.Role
       };
-      const expiration = {expiresIn: '1y' };
+      const expiration = { expiresIn: '1y' };
 
       token = jwt.sign(
         payload,
@@ -129,7 +126,8 @@ const signin = async ({ id, password }, secret, res) => {
   }
 
   if (token) {
-    var lastLogin = await dbQuery(query);
+    // Set the last-login date to today.
+    const lastLoginResult = await dbQuery(query);
     const serialized = cookie.serialize('token', token, {
       httpOnly: true,
       // secure: process.env.NODE_ENV === 'production',
@@ -139,16 +137,13 @@ const signin = async ({ id, password }, secret, res) => {
       path: '/',
     });          
     
+    if (lastLoginResult && lastLoginResult.changedRows === 1) error = '';
+    else error = lastLoginResult.info;
+
     res.setHeader('Set-Cookie', serialized);
-    
-    if (lastLogin.recordSet) {
-      lastLogin = lastLogin.recordSet.LastLogin;
-    } else {
-      console.log({lastLogin, query});
-    }
   }
   
-  return { user: { Id: recordSet.Id, Name: recordSet.Name, Role: recordSet.Role, RoleId: recordSet.RoleId, LastLogin: lastLogin }, error };
+  return { user: { Id: user.Id, Name: user.Name, Role: user.Role, RoleId: user.RoleId, LastLogin: date }, error };
 }
 
 const signout = async (user, res) => {

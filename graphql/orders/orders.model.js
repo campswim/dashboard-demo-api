@@ -1,6 +1,6 @@
 'use strict';
 
-const dbQuery = require('../../helpers/db.query');
+const dbQuery = require('../../helpers/db_query');
 
 const getAllOrders = async () => {
   const query = 'SELECT TOP (5) * FROM Orders';
@@ -17,8 +17,11 @@ const getAllFailedCrmPulls = async () => {
 const getAllUnpushedOrders = async () => {
   const query = 'SELECT DISTINCT OrderNumber, Market, OrderTotalAmount, PushStatusId FROM Orders WHERE PushStatusId IS NULL OR PushStatusId in (2, 3)';
   const result = await dbQuery(query);    
-  const recordSet = result?.recordSet;
+  let recordSet = result?.recordSet;
   const error = result?.message;
+
+  // Account for only one return, which means that the recordSet will be an object, not an array.
+  if (recordSet && !Array.isArray(recordSet)) recordSet = [recordSet];
   
   return recordSet ? recordSet : [{ Error: error }];
 }

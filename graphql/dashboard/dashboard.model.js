@@ -1,7 +1,7 @@
 'use strict';
 
 const axios = require('axios');
-const dbQuery = require('../../helpers/db.query');
+const dbQuery = require('../../helpers/db_query');
 const { getBcCompanyId, retrieveAccessToken } = require('../../helpers/oauth');
 
 const checkDbConnection = async (userId) => {

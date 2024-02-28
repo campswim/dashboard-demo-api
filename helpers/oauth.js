@@ -1,6 +1,6 @@
 const axios = require('axios');
 const qs = require('qs');
-const dbQuery = require('./db.query');
+const dbQuery = require('./db_query');
 const { encrypt, decrypt } = require('./encrypt-decrypt');
 
 async function getAuthConfig() {

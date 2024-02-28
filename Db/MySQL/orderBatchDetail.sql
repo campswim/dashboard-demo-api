@@ -1,3 +1,5 @@
+delete from OrderBatchDetail;
+
 insert into OrderBatchDetail (ErrorCode, ErrorMessage, Id, OrderBatchId, OrderNumber) values (NULL, NULL, '18366', '484', '51200299');
 insert into OrderBatchDetail (ErrorCode, ErrorMessage, Id, OrderBatchId, OrderNumber) values (NULL, NULL, '18367', '484', '51200301');
 insert into OrderBatchDetail (ErrorCode, ErrorMessage, Id, OrderBatchId, OrderNumber) values (NULL, NULL, '18368', '484', '51200302');

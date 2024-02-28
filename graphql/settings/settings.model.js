@@ -1,6 +1,6 @@
 'use strict';
 
-const dbQuery = require('../../helpers/db.query');
+const dbQuery = require('../../helpers/db_query');
 
 const getMapSettings = async () => {
   const query = `SELECT

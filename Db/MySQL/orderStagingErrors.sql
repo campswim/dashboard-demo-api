@@ -1,3 +1,5 @@
+delete from OrderStagingErrors;
+
 insert into OrderStagingErrors (At, CurrencyCode, Exception, Id, IgnoredAt, Message, OrderDate, OrderNumber, OrderTotal) values ('2023-10-03T15:44:05.045Z', 'usd', NULL, 32618, NULL, 'Calculated payment amount $45.25 does not add up to order Total $47.70', '2023-06-12T00:18:05.000Z', '51201523', 47.7);
 insert into OrderStagingErrors (At, CurrencyCode, Exception, Id, IgnoredAt, Message, OrderDate, OrderNumber, OrderTotal) values ('2023-10-04T22:28:33.968Z', 'usd', NULL, 32619, NULL, 'Free order with only virtual items', '2023-10-02T03:23:59.000Z', '51222018', 0);
 insert into OrderStagingErrors (At, CurrencyCode, Exception, Id, IgnoredAt, Message, OrderDate, OrderNumber, OrderTotal) values ('2023-10-04T22:28:34.313Z', 'usd', NULL, 32620, NULL, 'Free order with only virtual items', '2023-10-03T03:24:16.000Z', '51222037', 0);

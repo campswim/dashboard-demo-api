@@ -1,3 +1,5 @@
+DELETE FROM DashboardPages;
+
 insert into DashboardPages (Actions, Id, Page) values (NULL, 1, 'Dashboard');
 insert into DashboardPages (Actions, Id, Page) values ('Repull, Repush, Ignore, Unignore, Delete', 2, 'Failed Orders');
 insert into DashboardPages (Actions, Id, Page) values (NULL, 3, 'Failed Processes');

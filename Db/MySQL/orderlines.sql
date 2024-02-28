@@ -1,3 +1,5 @@
+delete from Orderlines;
+
 insert into Orderlines (CVolume, ComponentPrice, Description, ExtTaxAmount, Id, IsVirtual, ItemType, LineNumber, OrderNumber, ParentSku, Quantity, Sku, TaxRate, UnitCost, UnitPrice, UnitTaxAmount, Warehouse, Weight) values (NULL, NULL, 'Athlete', 4.97, '75584', 0, 0, 1, '51200299', NULL, 2, 'SUPerALTer-US', 0, 0, 35.47, NULL, 'DC-USA', NULL);
 insert into Orderlines (CVolume, ComponentPrice, Description, ExtTaxAmount, Id, IsVirtual, ItemType, LineNumber, OrderNumber, ParentSku, Quantity, Sku, TaxRate, UnitCost, UnitPrice, UnitTaxAmount, Warehouse, Weight) values (NULL, NULL, 'Holi+ Free Shipping Discount', 0, '75585', 1, 0, 2, '51200299', NULL, 1, 'Promo', 0, 0, -6.27, NULL, 'DC-USA', NULL);
 insert into Orderlines (CVolume, ComponentPrice, Description, ExtTaxAmount, Id, IsVirtual, ItemType, LineNumber, OrderNumber, ParentSku, Quantity, Sku, TaxRate, UnitCost, UnitPrice, UnitTaxAmount, Warehouse, Weight) values (NULL, NULL, 'Holi T-Rex - Yessir & Fashion', 17.25, '75586', 0, 2, 1, '51200300', NULL, 1, 'TKPASSER-CA', 0, 0, 344.97, NULL, 'DC-CA', NULL);

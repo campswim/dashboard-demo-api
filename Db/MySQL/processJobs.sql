@@ -1,3 +1,5 @@
+delete from ProcessJobs;
+
 insert into ProcessJobs (DataDirection, ExternalSystem, Id, Name) values ('IN', 'Burrito', 100, 'Pull Unshipped Orders');
 insert into ProcessJobs (DataDirection, ExternalSystem, Id, Name) values ('IN', 'Burrito', 101, 'Pull Shipped Orders');
 insert into ProcessJobs (DataDirection, ExternalSystem, Id, Name) values ('IN', 'Burrito', 102, 'Pull Fee Orders/Chargebacks');

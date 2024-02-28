@@ -5,6 +5,7 @@ type Query {
   unpushed: [Order]
   ignoredOrders: [IgnoredOrder]
   failedPullOrderById(ids: [String]!): [FailedCrmOrder]
+  orderDetails(id: String!): Order
 }
 
 type Mutation {
@@ -24,7 +25,10 @@ type Order {
   CreatedDate: String
   OrderDate: String
   Warehouse: String
+  PushStatus: String
   PushStatusId: Int
+  PulledDate: String
+  ErpInvoicedAt: String
   ShipToName: String
   ShipDate: String
   ShipMethod: String

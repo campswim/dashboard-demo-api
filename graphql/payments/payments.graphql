@@ -1,0 +1,23 @@
+type Query {
+  getAllFailedPayments: [Payment]
+}
+
+type Mutation {
+  dismissPaymentError(ids: [ID]!): [Payment]
+  reinstatePaymentError(ids: [ID]!): [Payment]
+}
+
+type Payment {
+  PaymentId: ID
+  OrderNumber: String
+  PaymentType: String
+  PaymentAmount: Float
+  CurrencyCode: String
+  PaymentDate: String
+  CardNumber: String
+  AttemptedAt: String
+  DismissedAt: String
+  DismissedBy: String
+  ErrorReason: String
+  Error: String
+}

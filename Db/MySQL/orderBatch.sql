@@ -1,3 +1,5 @@
+DELETE FROM OrderBatch;
+
 insert into OrderBatch (BatchDate, BatchMonth, CreatedAt, DailyBatchNumber, Id, Market, OrderBatchSize, ProcessedOrderCount, SelectedOrderCount) values ('2023-10-05T00:00:00.000Z', 0, '2023-10-05T00:24:39.458Z', 1, '482', 'US', 100, 0, 0);
 insert into OrderBatch (BatchDate, BatchMonth, CreatedAt, DailyBatchNumber, Id, Market, OrderBatchSize, ProcessedOrderCount, SelectedOrderCount) values ('2023-10-05T00:00:00.000Z', 0, '2023-10-05T00:26:48.130Z', 2, '483', 'US', 100, 0, 0);
 insert into OrderBatch (BatchDate, BatchMonth, CreatedAt, DailyBatchNumber, Id, Market, OrderBatchSize, ProcessedOrderCount, SelectedOrderCount) values ('2023-10-05T00:00:00.000Z', 0, '2023-10-05T00:33:03.224Z', 3, '484', 'US', 100, 0, 109);

@@ -37,6 +37,7 @@ type Params {
   ValueTypeId: Int
   ValueType: String
   Notes: String
+  ProcessJobIds: String
   EnabledDate: String
   ModifiedAt: String
   ModifiedBy: String
