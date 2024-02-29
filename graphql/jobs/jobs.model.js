@@ -22,8 +22,11 @@ const getAllProcessingErrors = async () => {
     JOIN ProcessJobs pj ON pe.ProcessJobId = pj.Id
     LEFT JOIN Users u ON pe.DismissedBy = u.Id
   `;
-  const { recordSet } = await dbQuery(query);  
-  return recordSet;
+  let recordSet = await dbQuery(query);
+
+  if (!recordSet) recordSet = [];
+
+  return Array.isArray(recordSet) ? recordSet : [recordSet];
 };
 
 const dismissJobError = async (ids, userId) => {
