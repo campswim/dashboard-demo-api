@@ -13,13 +13,13 @@ async function dbQuery(queryText, database = 'STAGING') {
     // Send the query and set it equal to an arrayed variable.
     const [ recordSet ] = await connection.query(`${queryText}`);
     
-    // console.log({queryText, recordSet});
+    if (queryText.includes('ErrorReason')) console.log({queryText, recordSet});
 
     connection.release();
 
     if (Array.isArray(recordSet)) { // For SELECT queries.
-      if (recordSet.length > 1 || recordSet.length === 0) return { recordSet };
-      else return recordSet[0];
+      if (recordSet.length <= 1) return recordSet[0];
+      else return recordSet;
     } else { // For INSERT and UPDATE queries, returns the object commented out at the end of this file.
       return recordSet;
     }

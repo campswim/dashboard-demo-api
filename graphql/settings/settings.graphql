@@ -4,7 +4,7 @@ type Query {
   getParamByName(name: String!): Params
   getType(table: String!, column: String!): DataType
   getValueTypeId(dataType: String!): DataTypeId
-  logChange(table: String!, column: String!, userId: Int!, prevValue: String, newValue: String, dataType: String!): Change
+  logChange(table: String!, rowName: String!, column: String!, userId: Int!, prevValue: String, newValue: String, dataType: String!): Change
 }
 
 type Mutation {
@@ -64,6 +64,7 @@ type Error {
 type Change {
   Id: ID!
   TableName: String
+  RowName: String
   ColumnName: String
   UserId: Int
   PrevValue: String

@@ -81,14 +81,14 @@ const getValueTypeId = async (dataType) => {
   return recordSet;
 };
 
-const logChange = async({ table, column, prevValue, newValue, dataType }, user) => {
+const logChange = async({ table, rowName, column, prevValue, newValue, dataType }, user) => {
   if (!isNaN(parseInt(dataType))) dataType = parseInt(dataType);
   
   let valueType = typeof dataType !== 'number' ? await getValueTypeId(dataType) : dataType;
 
   if (typeof valueType === 'object') valueType = valueType?.Id;
 
-  const query = `INSERT INTO ChangeLog (TableName, ColumnName, UserId, PrevValue, NewValue, ValueType) OUTPUT INSERTED.* VALUES ('${table}', '${column}', ${user.id}, '${prevValue}', '${newValue}', ${valueType})`;
+  const query = `INSERT INTO ChangeLog (TableName, RowName, ColumnName, UserId, PrevValue, NewValue, ValueType) OUTPUT INSERTED.* VALUES ('${table}', '${rowName}', '${column}', ${user.id}, '${prevValue}', '${newValue}', ${valueType})`;
 
   let result = await dbQuery(query);
   let recordSet = result?.recordSet;
