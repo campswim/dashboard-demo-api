@@ -23,7 +23,7 @@ async function dbQuery(queryText, database = 'STAGING') {
     }
   } catch (e) {
     console.error({e});
-    return { message: 'This system cannot connect to its database. Please check that your VPN is on and connected.' };
+    return { Error: 'This system cannot connect to its database. Please check that your VPN is on and connected. If it is, contact technical support.' };
   }
 }
 module.exports = dbQuery;

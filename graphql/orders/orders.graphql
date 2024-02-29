@@ -55,15 +55,16 @@ type Order {
 }
 
 type FailedCrmOrder {
-  Id: ID!
-  OrderNumber: String!
-  OrderDate: String!
-  OrderTotal: Float!
-  CurrencyCode: String!
-  Message: String!
-  At: String! 
+  Id: ID
+  OrderNumber: String
+  OrderDate: String
+  OrderTotal: Float
+  CurrencyCode: String
+  Message: String
+  At: String
   IgnoredAt: String
   Exception: String
+  Error: String
 }
 
 type FailedErpOrder {
