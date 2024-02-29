@@ -12,9 +12,7 @@ async function dbQuery(queryText, database = 'STAGING') {
     
     // Send the query and set it equal to an arrayed variable.
     const [ recordSet ] = await connection.query(`${queryText}`);
-    
-    if (queryText.includes('ErrorReason')) console.log({queryText, recordSet});
-
+        
     connection.release();
 
     if (Array.isArray(recordSet)) { // For SELECT queries.
@@ -23,7 +21,8 @@ async function dbQuery(queryText, database = 'STAGING') {
     } else { // For INSERT and UPDATE queries, returns the object commented out at the end of this file.
       return recordSet;
     }
-  } catch {
+  } catch (e) {
+    console.error({e});
     return { message: 'This system cannot connect to its database. Please check that your VPN is on and connected.' };
   }
 }
