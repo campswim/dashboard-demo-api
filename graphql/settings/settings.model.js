@@ -45,7 +45,7 @@ const updateParamSettings = async ({ id, column, newValue }, user) => {
   // const now = new Date().toISOString(); // Uses UTC, and we need local time.
   const now = 'GETDATE()';
   let query = `UPDATE AppParams SET ${column} = `;
-  query += !newValue ? 'NULL' : column === 'EnabledDate' && newValue ? now : `'${newValue}'`;
+  query += !newValue || newValue === 'None' ? 'NULL' : column === 'EnabledDate' && newValue ? now : `'${newValue}'`;
   query += `, ModifiedAt = ${now}, ModifiedBy = '${user}'`;
   query += ` OUTPUT INSERTED.* WHERE Name like '%${id}%'`;
   const { recordSet } = await dbQuery(query);
