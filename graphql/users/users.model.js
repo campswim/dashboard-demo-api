@@ -9,8 +9,8 @@ require('dotenv').config({ path: __dirname + '/../../../.env' });
 
 const getUserRoles = async () => {
   const query = 'SELECT * FROM Roles';
-  const { recordSet, rowCount } = await dbQuery(query);  
-  return rowCount <= 1 ? [recordSet] : recordSet;
+  const recordSet = await dbQuery(query);
+  return !Array.isArray(recordSet) ? [recordSet] : recordSet;
 };
 
 const getUserRestrictionsByRole = async (role) => {
@@ -20,9 +20,9 @@ const getUserRestrictionsByRole = async (role) => {
 
 const getAllUsers = async () => {
   const query = 'SELECT u.Id, Email, Name, r.Role as Role, u.Role as RoleId, DateRegistered, LastLogin, LoggedIn, FailedAttempts, Active FROM Users u JOIN Roles r ON u.Role = r.Id WHERE Active = 1';
-  const result = await dbQuery(query);
-  const { recordSet, rowCount, name, message } = result;
-  return name ? [{ Error: message }] : rowCount <= 1 ? [recordSet] : recordSet;
+  const recordSet = await dbQuery(query);
+
+  return !Array.isArray(recordSet) ? [recordSet] : recordSet;
 };
 
 const getUserById = async (id) => {
