@@ -2,13 +2,13 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 const mysql = require('mysql2');
 
-async function dbConnectMySql(database='STAGING') {
+function dbConnectMySql(database='STAGING') {
   const user = `${database}_DB_USERNAME`;
   const password = `${database}_DB_PASSWORD`;
   const db = `${database}_DB_NAME`;
   const host = `${database}_HOST`;
 
-  // Create a connection pool.
+  // Create a connection pool, if it doesn't already exist.
   const pool = mysql.createPool({
     host: process.env[host],
     user: process.env[user],
@@ -22,18 +22,10 @@ async function dbConnectMySql(database='STAGING') {
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
   });
-  
+    
   // Create a promise of the pool.
-  const promisePool = pool.promise();
-
-  return await promisePool.getConnection((err, connection) => {
-    if (err instanceof Error) { 
-      console.error(err);
-      return err;
-    } else {
-      return connection;
-    }
-  });  
+  const promisePool = pool.promise();  
+  return promisePool;
 }
 
 module.exports = {

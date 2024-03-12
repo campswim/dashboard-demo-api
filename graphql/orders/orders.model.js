@@ -10,17 +10,23 @@ const getAllOrders = async () => {
 
 const getAllFailedCrmPulls = async () => {
   const query = 'SELECT * FROM OrderStagingErrors WHERE IgnoredAt IS NULL';
-  const recordSet = await dbQuery(query);
+  let recordSet = await dbQuery(query);
+
+  if (!recordSet) recordSet = [];
+
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
 const getAllUnpushedOrders = async () => {
   const query = 'SELECT DISTINCT OrderNumber, Market, OrderTotalAmount, PushStatusId FROM Orders WHERE PushStatusId IS NULL OR PushStatusId in (2, 3)';
-  const recordSet = await dbQuery(query);     
+  let recordSet = await dbQuery(query);
+  
+  if (!recordSet) recordSet = [];
+
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
-const getAllFailedStagedPushes = async (daysBackk = 90) => {
+const getAllFailedStagedPushes = async (daysBack = 365) => {
   const query = `SELECT
       o.OrderNumber,
       o.CustomerNumber,
@@ -46,8 +52,12 @@ const getAllFailedStagedPushes = async (daysBackk = 90) => {
       AND b.BatchDate between DATE_ADD(NOW(), INTERVAL -${daysBack} DAY) and NOW()
       AND bd2.id IS NULL;
   `;
+  
   try {
-    const recordSet = await dbQuery(query);
+    let recordSet = await dbQuery(query);
+
+    if (!recordSet) recordSet = [];
+
     return Array.isArray(recordSet) ? recordSet : [recordSet];
   } catch (error) {
     console.error({error});
@@ -61,58 +71,87 @@ const getFailedPullOrderById = async (ids) => {
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
-const getAllIgnoredOrders = async (userId) => {  
-  const userEmail = await dbQuery(`SELECT Email from Users WHERE Id = ${userId}`);  
-  const queryIgnoredCrmOrders = 'SELECT OrderNumber, OrderDate, OrderTotal, CurrencyCode, IgnoredAt, Message FROM OrderStagingErrors WHERE IgnoredAt IS NOT NULL';
-  const queryIgnoredErpOrders = 'SELECT DISTINCT o.OrderNumber, o.CurrencyCode, o.OrderDate, o.OrderTotalAmount, bd.ErrorMessage FROM Orders o JOIN OrderBatchDetail bd ON o.OrderNumber = bd.OrderNumber LEFT OUTER JOIN OrderBatchDetail bd2 ON (o.OrderNumber = bd2.OrderNumber AND bd.id < bd2.id) WHERE PushStatusId = 3';
-  const crmResult = await dbQuery(queryIgnoredCrmOrders);
-  const erpResult = await dbQuery(queryIgnoredErpOrders);  
-  const uniqueErpOrderNumbers = [], erpRecordSetFiltered = [], ignored = [];
+const getAllIgnoredOrders = async (userId) => {
+  if (!userId) return { Error: 'No user ID was passed to the getAllIgnoredOrders function.' };
 
-  console.log({crmResult, erpResult});
+  // Get ignored CRM orders.
+  const getIgnoredCrmOrders = async () => {
+    const queryIgnoredCrmOrders = `SELECT 
+        OrderNumber, 
+        OrderDate, 
+        OrderTotal, 
+        CurrencyCode, 
+        IgnoredAt, 
+        u.Name as IgnoredBy,
+        Message 
+      FROM OrderStagingErrors ose
+      JOIN Users u on ose.IgnoredBy = u.Id
+      WHERE IgnoredAt IS NOT NULL
+    `;
+    const crmResult = await dbQuery(queryIgnoredCrmOrders);
 
-  // Remove duplicates from the ERP record set.
-  if (Array.isArray(erpResult)) {
-    if (erpResult.length > 1) {
-      erpResult.forEach(record => {
-       if (!uniqueErpOrderNumbers.includes(record.OrderNumber)) {
-        uniqueErpOrderNumbers.push(record.OrderNumber);
-        erpRecordSetFiltered.push(record);
-       }
-      })
-    }
-  }
-
-  if (!Array.isArray(crmResult)) {
-    ignored.push({
-      Type: 'CRM',
-      OrderNumber: crmResult.OrderNumber,
-      OrderDate: crmResult.OrderDate,
-      OrderTotal: crmResult.OrderTotal,
-      CurrencyCode: crmResult.CurrencyCode,
-      IgnoredDate: crmResult.IgnoredAt,
-      Message: crmResult.Message,
-      User: userEmail?.Email
-    });
-  } else if (crmResult.length > 1) {
-    crmResult.forEach(res => {
-      ignored.push({
+    if (!Array.isArray(crmResult)) {
+      return [{
         Type: 'CRM',
-        OrderNumber: res.OrderNumber,
-        OrderDate: res.OrderDate,
-        OrderTotal: res.OrderTotal,
-        CurrencyCode: res.CurrencyCode,
-        IgnoredDate: res.IgnoredAt,
-        Message: res.Message,
-        User: userEmail?.Email
+        OrderNumber: crmResult.OrderNumber,
+        OrderDate: crmResult.OrderDate,
+        OrderTotal: crmResult.OrderTotal,
+        CurrencyCode: crmResult.CurrencyCode,
+        IgnoredDate: crmResult.IgnoredAt,
+        Message: crmResult.Message,
+        User: crmResult.IgnoredBy
+      }];
+    } else if (crmResult.length >= 1) {
+      return crmResult.map(res => {
+        return {
+          Type: 'CRM',
+          OrderNumber: res.OrderNumber,
+          OrderDate: res.OrderDate,
+          OrderTotal: res.OrderTotal,
+          CurrencyCode: res.CurrencyCode,
+          IgnoredDate: res.IgnoredAt,
+          Message: res.Message,
+          User: res.IgnoredBy
+        }
       });
-    });
-  }
+    } else {
+      return [];
+    }
+  };
 
-  if (erpResult) {
-    if (Array.isArray(erpResult)) {
+  // Get ignored ERP orders.
+  const getIgnoredErpOrders = async () => {
+    const queryIgnoredErpOrders = `SELECT DISTINCT 
+        o.OrderNumber, 
+        o.CurrencyCode, 
+        o.OrderDate, 
+        o.OrderTotalAmount, 
+        bd.ErrorMessage, 
+        u.Name as IgnoredBy
+      FROM Orders o 
+      JOIN IgnorePush ip ON o.OrderNumber = ip.OrderNumber
+      JOIN Users u ON ip.IgnoredBy = u.Id
+      JOIN OrderBatchDetail bd ON o.OrderNumber = bd.OrderNumber 
+      LEFT OUTER JOIN OrderBatchDetail bd2 ON (o.OrderNumber = bd2.OrderNumber AND bd.id < bd2.id) 
+      WHERE PushStatusId = 3
+    `;
+    const erpResult = await dbQuery(queryIgnoredErpOrders);  
+    const uniqueErpOrderNumbers = [], erpRecordSetFiltered = [];
+
+    // Remove duplicates from the ERP record set.
+    if (Array.isArray(erpResult) && erpResult.length > 1) {
+      erpResult.forEach(record => {
+        if (!uniqueErpOrderNumbers.includes(record.OrderNumber)) {
+          uniqueErpOrderNumbers.push(record.OrderNumber);
+          erpRecordSetFiltered.push(record);
+        }
+      });
+    }
+    
+    // Populate the "ignored" array with ignored ERP items.
+    if (Array.isArray(erpResult) && erpResult.length > 0) {
       if (erpResult.length === 1) {
-        ignored.push({
+        return [{
           Type: 'ERP',
           OrderNumber: erpResult.OrderNumber,
           OrderDate: erpResult.OrderDate,
@@ -120,11 +159,11 @@ const getAllIgnoredOrders = async (userId) => {
           CurrencyCode: erpResult.CurrencyCode,
           IgnoredDate: new Date(),
           Message: erpResult.ErrorMessage,
-          User: userEmail?.Email
-        });
+          User: erpResult.IgnoredBy
+        }];
       } else if (erpRecordSetFiltered.length > 1) {
-        erpRecordSetFiltered.forEach(res => {
-          ignored.push({
+        return erpRecordSetFiltered.map(res => (
+          {
             Type: 'ERP',
             OrderNumber: res.OrderNumber,
             OrderDate: res.OrderDate,
@@ -132,14 +171,20 @@ const getAllIgnoredOrders = async (userId) => {
             CurrencyCode: res.CurrencyCode,
             IgnoredDate: new Date(),
             Message: res.ErrorMessage,
-            User: userEmail?.Email
-          });
-        });
+            User: res.IgnoredBy
+          }
+        ));
       }
+    } else {
+      return [];
     }
-  }
+  };
+  
+  const crmResults = await getIgnoredCrmOrders();
+  const erpResults = await getIgnoredErpOrders();
+  const concattedArray = crmResults.concat(erpResults);
 
-  return ignored;
+  return concattedArray;
 }
 
 const getOrderDetails = async (id) => {
@@ -173,7 +218,7 @@ const getOrderDetails = async (id) => {
 
   const result = await dbQuery(query);
   
-  return result?.rowCount <= 0 ? { Error: 'The order number entered does not exist.' } : result?.recordSet ? result.recordSet : { Error: 'An error occurred in the getOrderDetails function of the API', result }
+  return result?.rowCount[0] <= 0 ? { Error: 'This order has not been pulled from the CRM yet.' } : result?.recordSet ? result.recordSet : { Error: 'An error occurred in the getOrderDetails function of the API', result }
 }
 
 const repullCrmOrders = async (ids) => {
@@ -183,12 +228,15 @@ const repullCrmOrders = async (ids) => {
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
-const ignoreCrmOrders = async (ids) => {
+const ignoreCrmOrders = async (ids, userId) => {
   const idsString = ids.join(',');
-  const query = `UPDATE OrderStagingErrors SET IgnoredAt = LOCALTIME() WHERE OrderNumber in (${idsString})`;
+  const query = `UPDATE OrderStagingErrors SET IgnoredAt = NOW(), IgnoredBy = ${userId} WHERE OrderNumber in (${idsString})`;
   const recordSet = await dbQuery(query);
+  const resultsArray = [];
 
-  return recordSet?.affectedRows >= 1 ? ids : [{ Error: 'An error occurred in the process of ignoring orders; please contact technical support.'}];
+  if (recordSet?.affectedRows >= 1) ids.forEach(record => resultsArray.push({ OrderNumber: record }));
+
+  return resultsArray.length > 0 ? resultsArray : [{ Error: 'An error occurred in the process of ignoring orders; please contact technical support.'}];
 }
 
 const repushFailedStagedOrders = async (ids) => {
@@ -198,11 +246,26 @@ const repushFailedStagedOrders = async (ids) => {
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
-const ignoreFailedStagedOrders = async (ids) => {
+const ignoreFailedStagedOrders = async (ids, userId) => {  
   const idsString = ids.join(',');
-  const query = `UPDATE Orders SET PushStatusId = 3 OUTPUT INSERTED.* WHERE OrderNumber in (${idsString})`;
-  const { recordSet } = await dbQuery(query);
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+  const todayUtc = new Date();
+  const todayLocal = new Date(todayUtc.toISOString().split('.')[0] + '+07:00');
+  const todayLocalFormatted = todayLocal.toISOString().split('.')[0].split('T').join(' ');
+  const queryOne = `UPDATE Orders SET PushStatusId = 3 WHERE OrderNumber in (${idsString})`;
+  let queryTwo = 'INSERT INTO IgnorePush (OrderNumber, IgnoredBy, IgnoredAt) VALUES';
+
+  ids.forEach((id, idx) => {
+    if (ids.length === 1 || idx === ids.length - 1) queryTwo += `('${id}', ${userId}, '${todayLocalFormatted}') `;
+    else queryTwo += `('${id}', ${userId}, '${todayLocalFormatted}'),`;
+  });
+
+  queryTwo += `ON DUPLICATE KEY UPDATE IgnoredBy = ${userId}, IgnoredAt = '${todayLocalFormatted}';`;
+
+  const queryOneResult = await dbQuery(queryOne);
+  const queryTwoResult = await dbQuery(queryTwo);
+
+  if (queryOneResult?.affectedRows === ids.length && queryTwoResult?.affectedRows >= 1) return ids.map(id => ({ OrderNumber: id }));
+  else return [];
 }
 
 const deleteFailedStagedOrder = async (ids) => {
@@ -217,30 +280,42 @@ const unignoreIgnoredOrders = async (ids) => {
 
   const crmIds = [];
   const erpIds = [];
+
   ids.forEach(id => {
     const key = Object.keys(id)[0];
     if ('CRM' === key) crmIds.push(id[key]);
     else if ('ERP' === key) erpIds.push(id[key]);
   });
-  const crmQuery = `UPDATE OrderStagingErrors SET IgnoredAt = NULL OUTPUT INSERTED.OrderNumber WHERE OrderNumber in (${crmIds})`;
-  const erpQuery = `UPDATE Orders SET PushStatusId = 2 OUTPUT INSERTED.OrderNumber WHERE OrderNumber in (${erpIds})`;
+
+  const crmQuery = `UPDATE OrderStagingErrors SET IgnoredAt = NULL, IgnoredBy = NULL WHERE OrderNumber in (${crmIds})`;
+  const erpQueryOne = `UPDATE Orders SET PushStatusId = 2 WHERE OrderNumber in (${erpIds});`;
+  const erpQueryTwo = `UPDATE IgnorePush SET IgnoredAt = NULL, IgnoredBy = NULL WHERE OrderNumber in (${erpIds})`;
   const crmResult = crmIds.length > 0 ? await dbQuery(crmQuery) : '';
-  const erpResult = erpIds.length > 0 ? await dbQuery(erpQuery) : '';
-  const combinedReturn = [];
+  const erpResultOne = erpIds.length > 0 ? await dbQuery(erpQueryOne) : '';
+  const erpResultTwo = erpIds.length > 0 ? await dbQuery(erpQueryTwo) : '';
+    
+  if (crmResult) { // With crmResult.
+    let combinedReturn;
+    
+    if (crmResult?.affectedRows === crmIds.length) {
+      combinedReturn = crmIds.map(id => ({ OrderNumber: id }));
+    }
 
-  if (Array.isArray(crmResult.recordSet)) {
-    crmResult.recordSet.forEach(record => combinedReturn.push(record));
-  } else {
-    combinedReturn.push(crmResult.recordSet);
+    if (erpResultOne && erpResultTwo) {
+      if (erpResultOne.affectedRows === erpIds.length && erpResultTwo.affectedRows === erpIds.length) {
+        const tempArray = erpIds.map(id => ({ OrderNumber: id }));
+        const tempConcatted = combinedReturn.concat(tempArray);
+        combinedReturn = tempConcatted;
+      }
+    }
+
+    return combinedReturn;
+  } else { // Without crmResult.
+    if (erpResultOne && erpResultTwo) {
+      if (erpResultOne.affectedRows === erpIds.length && erpResultTwo.affectedRows === erpIds.length) return erpIds.map(id => ({ OrderNumber: id }));
+      else return null;
+    }
   }
-
-  if (Array.isArray(erpResult.recordSet)) {
-    erpResult.recordSet.forEach(record => combinedReturn.push(record));
-  } else {
-    combinedReturn.push(erpResult.recordSet);
-  }
-
-  return combinedReturn;
 }
 
 module.exports = { 

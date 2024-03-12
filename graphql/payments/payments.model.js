@@ -25,10 +25,19 @@ const getAllFailedPayments = async () => {
       ErrorReason is not NULL
   `;
 
-  let dismissedByIds, usernames;
+  let dismissedByIds, usernames, dismissedRecords;
   const recordSet = await dbQuery(query);
-  const dismissedRecords = !Array.isArray(recordSet) ? recordSet.DismissedBy : recordSet.filter(record => record.DismissedBy);
-    
+  
+  if (recordSet) {
+    if (!Array.isArray(recordSet)) {
+      recordSet.DismissedBy;
+    } else {
+      if (recordSet.length > 0 ) {
+        recordSet.filter(record => record.DismissedBy);
+      }
+    }
+  }
+  
   if (dismissedRecords || Array.isArray(dismissedRecords) && dismissedRecords.length > 0) dismissedByIds = dismissedRecords.map(record => record.DismissedBy);
   if (dismissedByIds && dismissedByIds.length > 0) usernames = await usersModel.getUsersByIds(dismissedByIds);
 
@@ -53,6 +62,36 @@ const getAllFailedPayments = async () => {
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
+const getAllUnpushedPayments = async () => {
+  const query = `SELECT DISTINCT
+      p.OrderNumber,
+      p.PaymentType,
+      p.PaymentAmount,
+      p.PaymentDate,
+      p.CardNumber,
+      p.SentToErp,
+      p.Id,
+      o.CurrencyCode
+    FROM
+      Payments p
+      JOIN Orders o ON p.OrderNumber = o.OrderNumber
+    WHERE
+      p.SentToErp IS NULL
+      AND NOT EXISTS (
+        SELECT
+          *
+        FROM
+          PaymentsTracking pt
+        WHERE
+          pt.PaymentId = p.ID
+      );
+  `;
+
+  const recordSet = await dbQuery(query);
+
+  return !recordSet ? [] : Array.isArray(recordSet) ? recordSet : [recordSet];
+}
+
 const dismissPaymentError = async (ids, user) => {
   if (!ids || !user) return;
 
@@ -68,11 +107,7 @@ const dismissPaymentError = async (ids, user) => {
     }
   });
 
-  // // Temp dev query.
-  // query = `UPDATE PaymentsTrackingHistory SET DismissedAt = ${now}, DismissedBy = '${userId}' OUTPUT INSERTED.PaymentId WHERE PaymentId IN (${idString})`;
-
-  // Prod query.
-  query = `UPDATE PaymentsTracking SET DismissedAt = ${now}, DismissedBy = '${user.id}' OUTPUT INSERTED.PaymentId, INSERTED.DismissedAt, INSERTED.DismissedBy WHERE PaymentId IN (${idString})`;
+  query = `UPDATE PaymentsTracking SET ErrorReason = NULL, DismissedAt = ${now}, DismissedBy = '${user.id}' OUTPUT INSERTED.PaymentId, INSERTED.DismissedAt, INSERTED.DismissedBy WHERE PaymentId IN (${idString})`;
 
   ({ recordSet } = await dbQuery(query));
 
@@ -102,6 +137,10 @@ const reinstatePaymentError = async (ids) => {
     }
   });
 
+  // Fetch the error reason from the payments-tracking-history table: this part of the process has not yet been worked out or tested. This function to be disabled in the dashboard for now. If it gets enabled, to reinstate a payment error, the reason will have to be fetched from the PTHistory table and inserted into the payments-tracking table where the payment ID matches.
+  // query = `SELECT PaymentID, ErrorReason FROM PaymentsTrackingHistory WHERE PaymentId IN (${idString})`;
+  // ({ recordSet } = await dbQuery(query));
+
   query = `UPDATE PaymentsTracking SET DismissedAt = NULL, DismissedBy = NULL OUTPUT INSERTED.PaymentId WHERE PaymentId IN (${idString})`;
 
   ({ recordSet } = await dbQuery(query));
@@ -111,6 +150,7 @@ const reinstatePaymentError = async (ids) => {
 
 module.exports = {
   getAllFailedPayments,
+  getAllUnpushedPayments,
   dismissPaymentError,
   reinstatePaymentError
 }

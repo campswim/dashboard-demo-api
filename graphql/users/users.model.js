@@ -25,10 +25,10 @@ const getAllUsers = async () => {
   return !Array.isArray(recordSet) ? [recordSet] : recordSet;
 };
 
-const getUserById = async (id) => {
+const getUserById = async (id) => {  
   if (!id) return { Error: 'No user ID was provided.' };
   const query = `SELECT u.Id, Email, Name, r.Role as Role, DateRegistered, LastLogin, LoggedIn, FailedAttempts FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = ${id}`;
-  const { recordSet } = await dbQuery(query);
+  const recordSet = await dbQuery(query);
   
   return recordSet;
 };

@@ -68,20 +68,20 @@ type FailedCrmOrder {
 }
 
 type FailedErpOrder {
-  OrderNumber: String!
-  CustomerNumber: String!
-  Market: String!
-  CurrencyCode: String!
-  OrderDate: String!
+  OrderNumber: String
+  CustomerNumber: String
+  Market: String
+  CurrencyCode: String
+  OrderDate: String
   Warehouse: String
   ShipToName: String
   ShipDate: String
-  OrderTotalAmount: Float!
+  OrderTotalAmount: Float
   OrderTypeDescription: String
-  StagingImportDate: String!
+  StagingImportDate: String
   ErpBatchId: String
   ErrorCode: String
-  ErrorMessage: String!
+  ErrorMessage: String
 }
 
 type IgnoredOrder {

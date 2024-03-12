@@ -1,4 +1,4 @@
-USE campswim_StagingHub
+USE StagingHubDemo
 ;
 
 DELETE FROM PushStatuses

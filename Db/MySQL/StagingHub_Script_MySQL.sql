@@ -1,9 +1,10 @@
-USE campswim_StagingHub
+USE StagingHubDemo
 ;
 
 CREATE TABLE PaymentsTracking(
 	PaymentId BIGINT NOT NULL,
 	DismissedAt DATETIME NULL,
+	DismissedBy TINYINT NULL,
 	ErrorReason VARCHAR(200) NULL,
 	AttemptedAt DATETIME NOT NULL,
 	RetiredAt DATETIME NOT NULL,
@@ -480,6 +481,6 @@ BEGIN
  AND PaymentId = CAST(@altId as BIGINT)
 END ;
 ;
-ALTER DATABASE campswim_StagingHub SET READ_WRITE 
+ALTER DATABASE StagingHubDemo SET READ_WRITE 
 ;
 */

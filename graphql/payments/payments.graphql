@@ -1,5 +1,6 @@
 type Query {
   getAllFailedPayments: [Payment]
+  getAllUnpushedPayments: [Payment]
 }
 
 type Mutation {
