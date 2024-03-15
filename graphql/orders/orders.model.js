@@ -66,8 +66,11 @@ const getAllFailedStagedPushes = async (daysBack = 365) => {
 
 const getUnpushedNoFail = async () => { // Used to populate the "Unpushed" tab of the failed-orders page.
   const query = 'SELECT OrderNumber, CustomerNumber, Market, CurrencyCode, CreatedDate, OrderDate, Warehouse, OrderTotalAmount, OrderTypeDescription, StagingImportDate FROM Orders WHERE PushStatusId IS NULL';
-  const { recordSet, rowCount } = await dbQuery(query);
-  return rowCount[0] > 1 ? recordSet : rowCount[0] === 1 ? [ recordSet ] : [];
+  let recordSet = await dbQuery(query);
+
+  if (!recordSet) recordSet = [];
+
+  return Array.isArray(recordSet) ? recordSet : [ recordSet ];
 }
 
 const getFailedPullOrderById = async (ids) => {
