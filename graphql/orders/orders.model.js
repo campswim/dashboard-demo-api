@@ -64,6 +64,12 @@ const getAllFailedStagedPushes = async (daysBack = 365) => {
   }
 }
 
+const getUnpushedNoFail = async () => { // Used to populate the "Unpushed" tab of the failed-orders page.
+  const query = 'SELECT OrderNumber, CustomerNumber, Market, CurrencyCode, CreatedDate, OrderDate, Warehouse, OrderTotalAmount, OrderTypeDescription, StagingImportDate FROM Orders WHERE PushStatusId IS NULL';
+  const { recordSet, rowCount } = await dbQuery(query);
+  return rowCount[0] > 1 ? recordSet : rowCount[0] === 1 ? [ recordSet ] : [];
+}
+
 const getFailedPullOrderById = async (ids) => {
   const idsString = ids.join(',');
   const query = `SELECT * FROM OrderStagingErrors where OrderNumber in (${idsString})`;
@@ -127,7 +133,8 @@ const getAllIgnoredOrders = async (userId) => {
         o.OrderDate, 
         o.OrderTotalAmount, 
         bd.ErrorMessage, 
-        u.Name as IgnoredBy
+        u.Name as IgnoredBy,
+        ip.IgnoredAt
       FROM Orders o 
       JOIN IgnorePush ip ON o.OrderNumber = ip.OrderNumber
       JOIN Users u ON ip.IgnoredBy = u.Id
@@ -206,13 +213,11 @@ const getOrderDetails = async (id) => {
       o.Warehouse, 
       o.ShipMethod, 
       o.PickupName,
-      ps.Name as PushStatus,
       o.StagingImportDate as PulledDate, 
       o.SentToErp, 
       o.ErpOrderNumber, 
       o.ErpInvoicedAt
     FROM dbo.Orders o
-    JOIN dbo.PushStatuses ps ON o.PushStatusId = ps.Id
     WHERE o.OrderNumber = '${id}'
   `;
 
@@ -248,9 +253,9 @@ const repushFailedStagedOrders = async (ids) => {
 
 const ignoreFailedStagedOrders = async (ids, userId) => {  
   const idsString = ids.join(',');
-  const todayUtc = new Date();
-  const todayLocal = new Date(todayUtc.toISOString().split('.')[0] + '+07:00');
-  const todayLocalFormatted = todayLocal.toISOString().split('.')[0].split('T').join(' ');
+  // const todayUtc = new Date();
+  // const todayLocal = new Date(todayUtc.toISOString().split('.')[0] + '+07:00');
+  // const todayLocalFormatted = todayLocal.toISOString().split('.')[0].split('T').join(' ');
   const queryOne = `UPDATE Orders SET PushStatusId = 3 WHERE OrderNumber in (${idsString})`;
   let queryTwo = 'INSERT INTO IgnorePush (OrderNumber, IgnoredBy, IgnoredAt) VALUES';
 
@@ -259,7 +264,7 @@ const ignoreFailedStagedOrders = async (ids, userId) => {
     else queryTwo += `('${id}', ${userId}, '${todayLocalFormatted}'),`;
   });
 
-  queryTwo += `ON DUPLICATE KEY UPDATE IgnoredBy = ${userId}, IgnoredAt = '${todayLocalFormatted}';`;
+  queryTwo += `ON DUPLICATE KEY UPDATE IgnoredBy = ${userId}, IgnoredAt = NOW();`;
 
   const queryOneResult = await dbQuery(queryOne);
   const queryTwoResult = await dbQuery(queryTwo);
@@ -287,9 +292,18 @@ const unignoreIgnoredOrders = async (ids) => {
     else if ('ERP' === key) erpIds.push(id[key]);
   });
 
-  const crmQuery = `UPDATE OrderStagingErrors SET IgnoredAt = NULL, IgnoredBy = NULL WHERE OrderNumber in (${crmIds})`;
-  const erpQueryOne = `UPDATE Orders SET PushStatusId = 2 WHERE OrderNumber in (${erpIds});`;
-  const erpQueryTwo = `UPDATE IgnorePush SET IgnoredAt = NULL, IgnoredBy = NULL WHERE OrderNumber in (${erpIds})`;
+  const crmQuery = `UPDATE OrderStagingErrors 
+    SET IgnoredAt = NULL, IgnoredBy = NULL 
+    WHERE OrderNumber in (${crmIds})
+  `;
+  const erpQueryOne = `UPDATE Orders 
+    SET PushStatusId = 2 
+    WHERE OrderNumber in (${erpIds});
+  `;
+  const erpQueryTwo = `UPDATE IgnorePush 
+    SET IgnoredAt = NULL, IgnoredBy = NULL 
+    WHERE OrderNumber in (${erpIds})
+  `;
   const crmResult = crmIds.length > 0 ? await dbQuery(crmQuery) : '';
   const erpResultOne = erpIds.length > 0 ? await dbQuery(erpQueryOne) : '';
   const erpResultTwo = erpIds.length > 0 ? await dbQuery(erpQueryTwo) : '';
@@ -322,7 +336,8 @@ module.exports = {
   getAllOrders, 
   getAllFailedCrmPulls,
   getAllUnpushedOrders,
-  getAllFailedStagedPushes, 
+  getAllFailedStagedPushes,
+  getUnpushedNoFail,
   getFailedPullOrderById, 
   getAllIgnoredOrders,
   getOrderDetails,

@@ -7,6 +7,7 @@ module.exports = {
     orders: async () => { return await ordersModel.getAllOrders(); },
     failedPulls: async () => { return await ordersModel.getAllFailedCrmPulls(); },
     unpushed: async () => { return await ordersModel.getAllUnpushedOrders(); },
+    unpushedNoFail: async () => { return await ordersModel.getUnpushedNoFail(); },
     failedPushes: async () => { return await ordersModel.getAllFailedStagedPushes(); },
     ignoredOrders: async (_, __, { user }) => { return await ordersModel.getAllIgnoredOrders(user.id); },
     failedPullOrderById: async (_, args) => { return await ordersModel.getFailedPullOrderById(args.ids); },
