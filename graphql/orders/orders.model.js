@@ -106,9 +106,9 @@ const getAllIgnoredOrders = async (userId) => {
         OrderDate: crmResult.OrderDate,
         OrderTotal: crmResult.OrderTotal,
         CurrencyCode: crmResult.CurrencyCode,
-        IgnoredDate: crmResult.IgnoredAt,
+        IgnoredAt: crmResult.IgnoredAt,
         Message: crmResult.Message,
-        User: crmResult.IgnoredBy
+        IgnoredBy: crmResult.IgnoredBy
       }];
     } else if (crmResult.length >= 1) {
       return crmResult.map(res => {
@@ -118,9 +118,9 @@ const getAllIgnoredOrders = async (userId) => {
           OrderDate: res.OrderDate,
           OrderTotal: res.OrderTotal,
           CurrencyCode: res.CurrencyCode,
-          IgnoredDate: res.IgnoredAt,
+          IgnoredAt: res.IgnoredAt,
           Message: res.Message,
-          User: res.IgnoredBy
+          IgnoredBy: res.IgnoredBy
         }
       });
     } else {
@@ -167,9 +167,9 @@ const getAllIgnoredOrders = async (userId) => {
           OrderDate: erpResult.OrderDate,
           OrderTotal: erpResult.OrderTotalAmount,
           CurrencyCode: erpResult.CurrencyCode,
-          IgnoredDate: new Date(),
+          IgnoredAt: new Date(),
           Message: erpResult.ErrorMessage,
-          User: erpResult.IgnoredBy
+          IgnoredBy: erpResult.IgnoredBy
         }];
       } else if (erpRecordSetFiltered.length > 1) {
         return erpRecordSetFiltered.map(res => (
@@ -179,9 +179,9 @@ const getAllIgnoredOrders = async (userId) => {
             OrderDate: res.OrderDate,
             OrderTotal: res.OrderTotalAmount,
             CurrencyCode: res.CurrencyCode,
-            IgnoredDate: new Date(),
+            IgnoredAt: new Date(),
             Message: res.ErrorMessage,
-            User: res.IgnoredBy
+            IgnoredBy: res.IgnoredBy
           }
         ));
       }
@@ -254,13 +254,17 @@ const repushFailedStagedOrders = async (ids) => {
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
-const ignoreFailedStagedOrders = async (ids, userId) => {  
+const ignoreFailedStagedOrders = async (ids, userId) => {
+
+  console.log({ids, userId});
+
   const idsString = ids.join(',');
-  // const todayUtc = new Date();
-  // const todayLocal = new Date(todayUtc.toISOString().split('.')[0] + '+07:00');
-  // const todayLocalFormatted = todayLocal.toISOString().split('.')[0].split('T').join(' ');
+  const todayUtc = new Date();
+  const todayLocal = new Date(todayUtc.toISOString().split('.')[0] + '+07:00');
+  const todayLocalFormatted = todayLocal.toISOString().split('.')[0].split('T').join(' ');
   const queryOne = `UPDATE Orders SET PushStatusId = 3 WHERE OrderNumber in (${idsString})`;
-  let queryTwo = 'INSERT INTO IgnorePush (OrderNumber, IgnoredBy, IgnoredAt) VALUES';
+  let queryTwo = 'INSERT INTO IgnorePush (OrderNumber, IgnoredBy, IgnoredAt) VALUES', queryOneResult, queryTwoResult;
+
 
   ids.forEach((id, idx) => {
     if (ids.length === 1 || idx === ids.length - 1) queryTwo += `('${id}', ${userId}, '${todayLocalFormatted}') `;
@@ -269,8 +273,8 @@ const ignoreFailedStagedOrders = async (ids, userId) => {
 
   queryTwo += `ON DUPLICATE KEY UPDATE IgnoredBy = ${userId}, IgnoredAt = NOW();`;
 
-  const queryOneResult = await dbQuery(queryOne);
-  const queryTwoResult = await dbQuery(queryTwo);
+  queryOneResult = await dbQuery(queryOne);
+  queryTwoResult = await dbQuery(queryTwo);
 
   if (queryOneResult?.affectedRows === ids.length && queryTwoResult?.affectedRows >= 1) return ids.map(id => ({ OrderNumber: id }));
   else return [];

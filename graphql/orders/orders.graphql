@@ -91,9 +91,9 @@ type IgnoredOrder {
   OrderDate: String
   OrderTotal: Float
   CurrencyCode: String
-  IgnoredDate: String
+  IgnoredAt: String
+  IgnoredBy: String
   Message: String
-  User: String
 }
 
 type OrderItem {
