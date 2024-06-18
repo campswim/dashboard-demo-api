@@ -62,7 +62,8 @@ app.use(limiter);
 // Apply the CORS policy.
 app.use(cors({
   origin: [
-    'http://localhost:3000', 
+    'http://localhost:3000',
+    'https://campswim-dashboard-demo.netlify.app/'
   ],
   credentials: true,
 }));
