@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const serverless = require('serverless-http');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
@@ -98,7 +99,8 @@ app.use(
 
 // Export the server for import in index.js.
 module.exports = {
-  server: app,
+  // server: app,
+  server: serverless(app),
   start: port => {
     if (!port) throw new Error('The port is missing.');
     app.listen(port, () => console.log(`Running GraphQL Server on port ${port}.`));
