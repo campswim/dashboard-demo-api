@@ -50,6 +50,9 @@ const validateToken = (req, _res, next) => {
   if (req && req.next) req.next();
 };
 
+app.set('trust proxy', 1); // The secont param is the number of proxies between the user and the server.
+app.get('/ip', (request, response) => response.send(request.ip))
+
 // Set up rate limiter: maximum of twenty requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
