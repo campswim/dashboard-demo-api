@@ -1,3 +1,7 @@
+/* 
+This is the file being used to query the MySQL database in the dashboard demo.
+*/
+
 'use strict';
 
 const { dbConnectMySql } = require('./db_connect_mysql');

@@ -7,9 +7,14 @@ function dbConnectMySql(database='STAGING') {
   const password = `${database}_DB_PASSWORD`;
   const db = `${database}_DB_NAME`;
   const host = `${database}_HOST`;
+  const jawsDb = process.env.JAWSDB_URL;
+
+  console.log({jawsDb});
 
   // Create a connection pool, if it doesn't already exist.
-  const pool = mysql.createPool({
+  const pool = jawsDb ? 
+    mysql.createPool(jawsDb) : 
+    mysql.createPool({
     host: process.env[host],
     user: process.env[user],
     password: process.env[password],
