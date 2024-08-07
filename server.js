@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const app = express();
 const { loadFilesSync } = require('@graphql-tools/load-files');
-// const { graphqlHTTP } = require('express-graphql');
 const { createHandler } = require('graphql-http/lib/use/express');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const compression = require('compression');
@@ -48,7 +47,9 @@ const validateToken = (req, _res, next) => {
     }
   }
 
-  if (req) req.next();
+  console.log({req});
+  
+  if (req && req.next) req.next();
 };
 
 // Set up rate limiter: maximum of twenty requests per minute
