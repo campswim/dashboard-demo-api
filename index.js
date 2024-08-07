@@ -1,7 +1,5 @@
 'use strict';
 
-console.log("Ian wuz ere.");
-
 require('dotenv').config({ path: __dirname + '/.env' });
 
 // Start the web server.
