@@ -24,6 +24,9 @@ const schema = makeExecutableSchema({
 
 const validateToken = (req, _res, next) => {  
   const operation = req?.body?.operation;
+
+  console.log({operation});
+  
   const noValidate = operation === 'signup' || operation === 'signin' || operation === 'userByEmail' || operation === 'usersSansToken' || operation === 'changePassword' || operation === 'getUserRoles' || operation === 'getUserRestrictions' ? true : false;
   let token = req?.headers?.cookie;
     
