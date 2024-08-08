@@ -4,13 +4,11 @@ const axios = require('axios');
 const dbQuery = require('../../helpers/db_query');
 const { getBcCompanyId, retrieveAccessToken } = require('../../helpers/oauth');
 
-const checkDbConnection = async (userId) => {
-  const query = `SELECT Id FROM Users WHERE Id = ${userId}`;
+const checkDbConnection = async () => {  
+  const query = `SELECT * FROM Users`;  
   const result = await dbQuery(query);
-  const recordSet = result?.recordSet;
-  const error = result?.message;
 
-  return error && !recordSet ? { Connected: false, Message: error } : { Connected: true };
+  return result && Array.isArray(result) && result.length >= 1 ? { Connected: true } : { Connected: false };
 }
 
 // This is only used with the missing-ERP items in BC, which is currently hidden.

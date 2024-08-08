@@ -213,11 +213,16 @@ const changePassword = async (id, password, firstSignin = false, secret, res) =>
 
 const updateUser = async ({ id, column, newValue }) => {
   const rowId = 'Role' === column ? parseInt(newValue) : '';
-  let query = `UPDATE Users SET ${column} = '${newValue}' OUTPUT INSERTED.${column} WHERE Id = ${id}`;
-  if (rowId && !isNaN(rowId)) query = `UPDATE Users SET ${column} = ${rowId} OUTPUT INSERTED.${column} WHERE Id = ${id}`;
+  let query = `UPDATE Users SET ${column} = '${newValue}' WHERE Id = ${id}`, result, error;
+  
+  if (rowId && !isNaN(rowId)) query = `UPDATE Users SET ${column} = ${rowId} WHERE Id = ${id}`;
     
-  const { recordSet, name, message } = await dbQuery(query);
-  return name ? { Error: message } : recordSet;
+  result = await dbQuery(query);
+
+  if (result) {
+    if (result.changedRows && result.changedRows === 1) return { [column]: newValue, Error: '' };
+    else return { Error: 'The attempt to update the user was unsuccessful.' };
+  } else return { Error: 'The database is not responding. Please contact technical support.' };
 };
 
 module.exports = {

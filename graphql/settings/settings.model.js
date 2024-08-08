@@ -28,8 +28,26 @@ const getMapSettings = async () => {
 };
 
 const getParamSettings = async () => {
-  const query = `SELECT ap.Name, Value, ProcessJobIds, Category, SubCategory, ValueTypeId, apvt.Type as ValueType, Notes, EnabledDate, ModifiedAt, ModifiedBy as UserId, u.Name as ModifiedBy FROM AppParams ap LEFT JOIN AppParamValueTypes apvt ON ap.ValueTypeId = apvt.ID LEFT JOIN Users u ON ModifiedBy = cast(u.Id as varchar(50))`;
-  const result = await dbQuery(query);  
+  const query = `SELECT
+      ap.Name,
+      Value,
+      ProcessJobIds,
+      Category,
+      SubCategory,
+      ValueTypeId,
+      apvt.Type as ValueType,
+      Notes,
+      EnabledDate,
+      ModifiedAt,
+      ModifiedBy as UserId,
+      u.Name as ModifiedBy
+    FROM
+      AppParams ap
+      LEFT JOIN AppParamValueTypes apvt ON ap.ValueTypeId = apvt.ID
+      LEFT JOIN Users u ON ModifiedBy = u.Id
+  `;
+  const result = await dbQuery(query);
+
   return result.recordSet ? result.recordSet : result;
 };
 
@@ -64,8 +82,7 @@ const updateMapSettings = async ({ id, column, newValue }, user) => {
 
 const getType = async ({ table, column }) => {
   const query = `SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH AS MAX_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '${table}' and COLUMN_NAME = '${column}'`;
-
-  const { recordSet } = await dbQuery(query);
+  const recordSet = await dbQuery(query);
   const resultObj = {
     ColumnName: recordSet?.COLUMN_NAME,
     DataType: recordSet?.DATA_TYPE,
@@ -83,19 +100,21 @@ const getValueTypeId = async (dataType) => {
 
 const logChange = async({ table, rowName, column, prevValue, newValue, dataType }, user) => {
   if (!isNaN(parseInt(dataType))) dataType = parseInt(dataType);
+
+  let valueType, query, result;
   
-  let valueType = typeof dataType !== 'number' ? await getValueTypeId(dataType) : dataType;
+  valueType = typeof dataType !== 'number' ? await getValueTypeId(dataType) : dataType;
 
   if (typeof valueType === 'object') valueType = valueType?.Id;
 
-  const query = `INSERT INTO ChangeLog (TableName, RowName, ColumnName, UserId, PrevValue, NewValue, ValueType) OUTPUT INSERTED.* VALUES ('${table}', '${rowName}', '${column}', ${user.id}, '${prevValue}', '${newValue}', ${valueType})`;
+  query = `INSERT INTO ChangeLog (TableName, RowName, ColumnName, UserId, PrevValue, NewValue, ValueType) VALUES ('${table}', '${rowName}', '${column}', ${user.id}, '${prevValue}', '${newValue}', ${valueType})`;
 
-  let result = await dbQuery(query);
-  let recordSet = result?.recordSet;
-  const message = result?.message;
-  if (message) recordSet.Error = message;
+  result = await dbQuery(query);
 
-  return recordSet;
+  if (result) {
+    if (result.insertId) return { Id: result.insertId };
+    else if (result.warningStatus) return { Error: 'The change was not logged.' }
+  } else return { Error: 'The change was not logged.' };
 }
 
 module.exports = { getMapSettings, getParamSettings, getParamByName, updateParamSettings, updateMapSettings, getType, getValueTypeId, logChange };

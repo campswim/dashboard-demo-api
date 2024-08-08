@@ -23,11 +23,8 @@ const schema = makeExecutableSchema({
 });
 
 const validateToken = (req, _res, next) => {  
-  const operation = req?.body?.operation;
-
-  console.log({operation});
-  
-  const noValidate = operation === 'signup' || operation === 'signin' || operation === 'userByEmail' || operation === 'usersSansToken' || operation === 'changePassword' || operation === 'getUserRoles' || operation === 'getUserRestrictions' ? true : false;
+  const operation = req?.body?.operation;  
+  const noValidate = operation === 'signup' || operation === 'signin' || operation === 'userByEmail' || operation === 'usersSansToken' || operation === 'changePassword' || operation === 'getUserRoles' || operation === 'getUserRestrictions' || operation === 'checkDbConnection' ? true : false;
   let token = req?.headers?.cookie;
     
   if (token && token.includes('Bearer ')) token = token.split(' ')[1];  

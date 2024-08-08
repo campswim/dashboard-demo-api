@@ -218,9 +218,8 @@ const getOrderDetails = async (id) => {
       o.PickupName,
       o.StagingImportDate as PulledDate, 
       o.SentToErp, 
-      o.ErpOrderNumber, 
-      o.ErpInvoicedAt
-    FROM dbo.Orders o
+      o.ErpOrderNumber
+    FROM Orders o
     WHERE o.OrderNumber = '${id}'
   `;
 
