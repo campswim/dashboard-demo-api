@@ -11,7 +11,9 @@ module.exports = {
     failedPushes: async () => { return await ordersModel.getAllFailedStagedPushes(); },
     ignoredOrders: async (_, __, { user }) => { return await ordersModel.getAllIgnoredOrders(user.id); },
     failedPullOrderById: async (_, args) => { return await ordersModel.getFailedPullOrderById(args.ids); },
-    orderDetails: async (_, args) => { return await ordersModel.getOrderDetails(args.id); }
+    orderDetails: async (_, args) => { return await ordersModel.getOrderDetails(args.id ? args.id : null); },
+    getCrmOrderDetails: async (_, args) => { return await ordersModel.getCrmOrderDetails(args.id); },
+    getPushStatusById: async (_, args) => { return await ordersModel.getPushStatusById(args.id); }
   },
   Mutation: {
     repullCrmOrders: async (_, args) => { return await ordersModel.repullCrmOrders(args.ids); },

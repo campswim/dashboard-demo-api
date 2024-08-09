@@ -2,11 +2,13 @@ type Query {
   orders: [Order]
   failedPulls: [FailedCrmOrder]
   failedPushes: [FailedErpOrder]
-  unpushed: [Order]
+  unpushed: [UnpushedDashboard]
   unpushedNoFail: [Order]
   ignoredOrders: [IgnoredOrder]
   failedPullOrderById(ids: [String]!): [FailedCrmOrder]
   orderDetails(id: String!): Order
+  getCrmOrderDetails(id: String!): FailedCrmOrder
+  getPushStatusById(id: ID!): PushStatus
 }
 
 type Mutation {
@@ -56,33 +58,32 @@ type Order {
 }
 
 type FailedCrmOrder {
-  Id: ID
-  OrderNumber: String
-  OrderDate: String
-  OrderTotal: Float
-  CurrencyCode: String
-  Message: String
-  At: String
+  Id: ID!
+  OrderNumber: String!
+  OrderDate: String!
+  OrderTotal: Float!
+  CurrencyCode: String!
+  Message: String!
+  At: String! 
   IgnoredAt: String
   Exception: String
-  Error: String
 }
 
 type FailedErpOrder {
-  OrderNumber: String
-  CustomerNumber: String
-  Market: String
-  CurrencyCode: String
-  OrderDate: String
+  OrderNumber: String!
+  CustomerNumber: String!
+  Market: String!
+  CurrencyCode: String!
+  OrderDate: String!
   Warehouse: String
   ShipToName: String
   ShipDate: String
-  OrderTotalAmount: Float
+  OrderTotalAmount: Float!
   OrderTypeDescription: String
-  StagingImportDate: String
+  StagingImportDate: String!
   ErpBatchId: String
   ErrorCode: String
-  ErrorMessage: String
+  ErrorMessage: String!
 }
 
 type IgnoredOrder {
@@ -91,15 +92,28 @@ type IgnoredOrder {
   OrderDate: String
   OrderTotal: Float
   CurrencyCode: String
+  Message: String
   IgnoredAt: String
   IgnoredBy: String
-  Message: String
 }
 
 type OrderItem {
   product: Product
   quantity: Int
   itemNumber: Int!
+}
+
+type PushStatus {
+  Id: ID
+  Name: String
+}
+
+type UnpushedDashboard {
+  Type: String
+  Market: String
+  OrderTotalAmount: Float
+  Count: Int
+  Error: String
 }
 
 input IgnoredObject {

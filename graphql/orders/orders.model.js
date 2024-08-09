@@ -185,9 +185,20 @@ const getAllIgnoredOrders = async (userId) => {
           }
         ));
       }
-    } else {
-      return [];
-    }
+    } else if (!Array.isArray(erpResult)) {
+      return [
+        {
+          Type: 'ERP',
+          OrderNumber: erpResult.OrderNumber,
+          OrderDate: erpResult.OrderDate,
+          OrderTotal: erpResult.OrderTotalAmount,
+          CurrencyCode: erpResult.CurrencyCode,
+          IgnoredAt: new Date(),
+          Message: erpResult.ErrorMessage,
+          IgnoredBy: erpResult.IgnoredBy
+        }
+      ];
+    } else return erpResult;
   };
   
   const crmResults = await getIgnoredCrmOrders();
@@ -200,33 +211,28 @@ const getAllIgnoredOrders = async (userId) => {
 const getOrderDetails = async (id) => {
   if (!id) return { Error: 'No Order ID was provided to the API.'};
   
-  const query = `SELECT
-      o.OrderNumber, 
-      o.CustomerNumber, 
-      o.Market, 
-      o.CurrencyCode, 
-      o.OrderTypeDescription, 
-      o.ReferenceOrderNumber,
-      o.OrderTotalAmount, 
-      o.TaxAmount, 
-      o.FreightAmount, 
-      o.FreightTaxAmount,
-      o.OrderDate, 
-      o.ShipDate, 
-      o.Warehouse, 
-      o.ShipMethod, 
-      o.PickupName,
-      o.StagingImportDate as PulledDate, 
-      o.SentToErp, 
-      o.ErpOrderNumber
-    FROM Orders o
-    WHERE o.OrderNumber = '${id}'
-  `;
+  const query = `SELECT OrderNumber, CustomerNumber, Market, CurrencyCode, OrderTypeDescription, ReferenceOrderNumber,OrderTotalAmount, TaxAmount, FreightAmount, FreightTaxAmount, OrderDate, ShipDate, Warehouse, ShipMethod, PickupName, StagingImportDate as PulledDate, SentToErp, ErpOrderNumber FROM Orders WHERE OrderNumber = '${id}'`;
 
   const result = await dbQuery(query);
   
-  return result?.rowCount[0] <= 0 ? { Error: 'This order has not been pulled from the CRM yet.' } : result?.recordSet ? result.recordSet : { Error: 'An error occurred in the getOrderDetails function of the API', result }
+  return !result ? { Error: 'An error occurred in the getOrderDetails function of the API', result } : Array.isArray(result) && result.length <= 0 ? null : result;
 }
+
+const getCrmOrderDetails = async (id) => {
+  if (!id) return { Error: 'No Order Number was submitted.' };
+
+  const query = `SELECT * FROM OrderStagingErrors WHERE OrderNumber = '${id}'`;  
+  const result = await dbQuery(query);
+
+  return Array.isArray(result) && result.length <= 0 ? { Error: 'This order has not been pulled from the CRM yet or the order number does not exist.' } : !result ? { Error: 'An error occurred in the getCrmOrderDetails function of the API' } : result;
+};
+
+const getPushStatusById = async (id) => {
+  if (!id) return { Error: 'No Order ID was provided to the API.' };
+  const query = `SELECT * FROM PushStatuses WHERE Id = ${id}`;
+  const { recordSet } = await dbQuery(query);
+  return recordSet;
+};
 
 const repullCrmOrders = async (ids) => {
   const idsString = ids.join(',');
@@ -248,9 +254,13 @@ const ignoreCrmOrders = async (ids, userId) => {
 
 const repushFailedStagedOrders = async (ids) => {
   const idsString = ids.join(',');
-  const query = `UPDATE Orders SET PushStatusId = NULL OUTPUT INSERTED.* WHERE OrderNumber in (${idsString})`;
-  const { recordSet } = await dbQuery(query);
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+  const query = `UPDATE Orders SET PushStatusId = NULL WHERE OrderNumber in (${idsString})`;
+  const recordSet = await dbQuery(query);
+  const resultsArray = [];
+
+  if (recordSet?.affectedRows >= 1) ids.forEach(record => resultsArray.push({ OrderNumber: record }));
+
+  return resultsArray.length > 0 ? resultsArray : [{ Error: 'An error occurred in the process of ignoring orders; please contact technical support.'}];
 }
 
 const ignoreFailedStagedOrders = async (ids, userId) => {
@@ -295,6 +305,8 @@ const unignoreIgnoredOrders = async (ids) => {
     else if ('ERP' === key) erpIds.push(id[key]);
   });
 
+  console.log({crmIds, erpIds});
+
   const crmQuery = `UPDATE OrderStagingErrors 
     SET IgnoredAt = NULL, IgnoredBy = NULL 
     WHERE OrderNumber in (${crmIds})
@@ -310,7 +322,7 @@ const unignoreIgnoredOrders = async (ids) => {
   const crmResult = crmIds.length > 0 ? await dbQuery(crmQuery) : '';
   const erpResultOne = erpIds.length > 0 ? await dbQuery(erpQueryOne) : '';
   const erpResultTwo = erpIds.length > 0 ? await dbQuery(erpQueryTwo) : '';
-    
+  
   if (crmResult) { // With crmResult.
     let combinedReturn;
     
@@ -328,6 +340,8 @@ const unignoreIgnoredOrders = async (ids) => {
 
     return combinedReturn;
   } else { // Without crmResult.
+
+    console.log({erpResultOne, erpResultTwo});
     if (erpResultOne && erpResultTwo) {
       if (erpResultOne.affectedRows === erpIds.length && erpResultTwo.affectedRows === erpIds.length) return erpIds.map(id => ({ OrderNumber: id }));
       else return null;
@@ -344,6 +358,8 @@ module.exports = {
   getFailedPullOrderById, 
   getAllIgnoredOrders,
   getOrderDetails,
+  getCrmOrderDetails,
+  getPushStatusById,
   repullCrmOrders, 
   ignoreCrmOrders, 
   repushFailedStagedOrders,
