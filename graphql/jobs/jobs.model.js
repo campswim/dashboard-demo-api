@@ -30,7 +30,8 @@ const getAllProcessingErrors = async () => {
 };
 
 const dismissJobError = async (ids, userId) => {
-  const now = 'GETDATE()';
+  const now = new Date();
+  const results = [];
   let idString, query, recordSet;
 
   ids.forEach((id, idx) => {
@@ -42,14 +43,25 @@ const dismissJobError = async (ids, userId) => {
     } 
   });
 
-  query = `UPDATE ProcessingErrors SET DismissedAt = ${now}, DismissedBy = '${userId}' OUTPUT INSERTED.Id WHERE Id IN (${idString})`;
+  query = `UPDATE ProcessingErrors SET DismissedAt = NOW(), DismissedBy = '${userId}' WHERE Id IN (${idString})`;
 
-  ({ recordSet } = await dbQuery(query));
+  recordSet = await dbQuery(query);
 
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+  if (recordSet && recordSet.changedRows === ids.length) {
+    ids.forEach(id => {
+      results.push({
+        Id: id,
+        DismissedAt: now,
+        DismissedBy: userId
+      });
+    });
+  }
+
+  return results.length > 0 ? results : [{ Error: 'The attempt to dismiss job(s) failed.' }];
 };
 
 const reinstateJobError = async (ids) => {
+  const results = [];
   let idString, query, recordSet;
 
   ids.forEach((id, idx) => {
@@ -61,11 +73,19 @@ const reinstateJobError = async (ids) => {
     } 
   });
 
-  query = `UPDATE ProcessingErrors SET DismissedAt = NULL, DismissedBy = NULL OUTPUT INSERTED.Id WHERE Id IN (${idString})`;
+  query = `UPDATE ProcessingErrors SET DismissedAt = NULL, DismissedBy = NULL WHERE Id IN (${idString})`;
 
-  ({ recordSet } = await dbQuery(query));
+  recordSet = await dbQuery(query);
 
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+  if (recordSet && recordSet.affectedRows === ids.length) {
+    ids.forEach(id => {
+      results.push({
+        Id: id,
+      });
+    });
+  }
+
+  return results.length > 0 ? results : [{ Error: 'The attempt to dismiss job(s) failed.' }];
 };
 
 module.exports = {

@@ -17,14 +17,108 @@ const getAllFailedCrmPulls = async () => {
   return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
-const getAllUnpushedOrders = async () => {
-  const query = 'SELECT DISTINCT OrderNumber, Market, OrderTotalAmount, PushStatusId FROM Orders WHERE PushStatusId IS NULL OR PushStatusId in (2, 3)';
-  let recordSet = await dbQuery(query);
-  
-  if (!recordSet) recordSet = [];
+const getAllUnpushedOrders = async () => { // Used for the homepage's "Staged Orders" section.
+  // const query = 'SELECT DISTINCT OrderNumber, Market, OrderTotalAmount, PushStatusId FROM Orders WHERE PushStatusId IS NULL OR PushStatusId in (2, 3)'; // This query mostly works, except when the status ID isn't updated in Chad's API, a rare occurence.
+  const queryUnpushed = `SELECT o.Market, Count(*) as Count, Sum(o.OrderTotalAmount) as OrderTotalAmount FROM Orders o WHERE o.SentToErp IS NULL GROUP BY o.Market`;
+  const queryFailedPushed = 'SELECT Market, Count(*) as Count, Sum(OrderTotalAmount) as OrderTotalAmount FROM Orders WHERE SentToErp IS NULL and PushStatusId = 2 GROUP BY Market';
+  const queryIgnored = 'SELECT Market, Count(*) as Count, Sum(OrderTotalAmount) as OrderTotalAmount FROM Orders WHERE SentToErp IS NULL and PushStatusId = 3 GROUP BY Market';
+  const unpushed = await dbQuery(queryUnpushed);
+  const failedPushed = await dbQuery(queryFailedPushed);
+  const ignored = await dbQuery(queryIgnored);
+  let result = [], error;
 
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
-}
+  // Collate the unpushed returns.
+  if (unpushed) {
+    if (Array.isArray(unpushed)) {
+      unpushed.forEach(record => {
+        const obj = {
+          Type: 'Unpushed',
+          Market: record.Market,
+          OrderTotalAmount: record.OrderTotalAmount,
+          Count: record.Count
+        };
+
+        result.push(obj);
+      });
+    } else {
+      const obj = {
+        Type: 'Unpushed',
+        Market: unpushed.Market,
+        OrderTotalAmount: unpushed.OrderTotalAmount,
+        Count: unpushed.Count
+      };
+
+      result.push(obj);
+    }
+    
+    if (unpushed.message) {
+      error = unpushed.message;
+      result.push({ Type: 'Unpushed', Error: error });
+    }
+  }
+
+  // Collate the failed-push returns.
+  if (failedPushed) {
+    if (Array.isArray(failedPushed)) {
+      failedPushed.forEach(record => {
+        const obj = {
+          Type: 'Push Failed',
+          Market: record.Market,
+          OrderTotalAmount: record.OrderTotalAmount,
+          Count: record.Count
+        };
+  
+        result.push(obj);
+      });
+    } else {
+      const obj = {
+        Type: 'Push Failed',
+        Market: failedPushed.Market,
+        OrderTotalAmount: failedPushed.OrderTotalAmount,
+        Count: failedPushed.Count
+      };
+
+      result.push(obj);
+    }
+    
+    if (failedPushed.message) {
+      error = failedPushed.message;
+      result.push({ Type: 'Push Failed', Error: error });
+    }
+  }
+
+  // Collate the ignored-orders returns.
+  if (ignored) {
+    if (Array.isArray(ignored)) {
+      ignored.recordSet.forEach(record => {
+        const obj = {
+          Type: 'Ignored',
+          Market: record.Market,
+          OrderTotalAmount: record.OrderTotalAmount,
+          Count: record.Count
+        };
+  
+        result.push(obj);
+      });
+    } else {
+      const obj = {
+        Type: 'Ignored',
+        Market: ignored.Market,
+        OrderTotalAmount: ignored.OrderTotalAmount,
+        Count: ignored.Count
+      };
+
+      result.push(obj);
+    }
+    
+    if (ignored && ignored.message) {
+      error = ignored.message;
+      result.push({ Type: 'Ignored', Error: error });
+    }
+  }
+  
+  return result;
+};
 
 const getAllFailedStagedPushes = async (daysBack = 365) => {
   const query = `SELECT
