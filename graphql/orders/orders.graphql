@@ -12,12 +12,12 @@ type Query {
 }
 
 type Mutation {
-  repullCrmOrders(ids: [String]!): [FailedCrmOrder]
-  ignoreCrmOrders(ids: [String]!): [FailedCrmOrder]
-  repushFailedStagedOrders(ids: [String]!): [FailedErpOrder]
+  repullCrmOrders(ids: [String]!, mode: String): [FailedCrmOrder]
+  ignoreCrmOrders(ids: [String]!, mode: String): [FailedCrmOrder]
+  repushFailedStagedOrders(ids: [String]!, mode: String): [FailedErpOrder]
   ignoreFailedStagedOrders(ids: [String]!): [FailedErpOrder]
   unignoreOrder(ids: [IgnoredObject]!): [IgnoredOrder]
-  deleteFailedStagedOrder(ids: [String]!): [FailedErpOrder]
+  deleteFailedStagedOrder(ids: [String]!, mode: String): [FailedErpOrder]
 }
 
 type Order {
@@ -58,32 +58,33 @@ type Order {
 }
 
 type FailedCrmOrder {
-  Id: ID!
-  OrderNumber: String!
-  OrderDate: String!
-  OrderTotal: Float!
-  CurrencyCode: String!
-  Message: String!
-  At: String! 
+  Id: ID
+  OrderNumber: String
+  OrderDate: String
+  OrderTotal: Float
+  CurrencyCode: String
+  Message: String
+  At: String
   IgnoredAt: String
   Exception: String
 }
 
 type FailedErpOrder {
-  OrderNumber: String!
-  CustomerNumber: String!
-  Market: String!
-  CurrencyCode: String!
-  OrderDate: String!
+  OrderNumber: String
+  CustomerNumber: String
+  Market: String
+  CurrencyCode: String
+  OrderDate: String
   Warehouse: String
   ShipToName: String
   ShipDate: String
-  OrderTotalAmount: Float!
+  OrderTotalAmount: Float
   OrderTypeDescription: String
-  StagingImportDate: String!
+  StagingImportDate: String
   ErpBatchId: String
   ErrorCode: String
-  ErrorMessage: String!
+  ErrorMessage: String
+  Message: String
 }
 
 type IgnoredOrder {

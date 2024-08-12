@@ -328,14 +328,20 @@ const getPushStatusById = async (id) => {
   return recordSet;
 };
 
-const repullCrmOrders = async (ids) => {
-  const idsString = ids.join(',');
-  const query = `DELETE FROM OrderStagingErrors OUTPUT DELETED.* WHERE OrderNumber in (${idsString})`;
-  const { recordSet } = await dbQuery(query);
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+const repullCrmOrders = async (ids, mode = 'prod') => {
+  if (mode === 'demo') return [{ Message: 'This feature has been disabled in the demo.' }];
+  else {
+    const idsString = ids.join(',');
+    const query = `DELETE FROM OrderStagingErrors WHERE OrderNumber in (${idsString})`;
+    let recordSet = await dbQuery(query);
+
+    if (recordSet && recordSet.affectedRows && recordSet.affectedRows === ids.length) recordSet = ids.map(id => ({ Id: id }));
+
+    return recordSet;
+  }
 }
 
-const ignoreCrmOrders = async (ids, userId) => {
+const ignoreCrmOrders = async (ids, mode = 'prod', userId) => {
   const idsString = ids.join(',');
   const query = `UPDATE OrderStagingErrors SET IgnoredAt = NOW(), IgnoredBy = ${userId} WHERE OrderNumber in (${idsString})`;
   const recordSet = await dbQuery(query);
@@ -346,15 +352,18 @@ const ignoreCrmOrders = async (ids, userId) => {
   return resultsArray.length > 0 ? resultsArray : [{ Error: 'An error occurred in the process of ignoring orders; please contact technical support.'}];
 }
 
-const repushFailedStagedOrders = async (ids) => {
-  const idsString = ids.join(',');
-  const query = `UPDATE Orders SET PushStatusId = NULL WHERE OrderNumber in (${idsString})`;
-  const recordSet = await dbQuery(query);
-  const resultsArray = [];
-
-  if (recordSet?.affectedRows >= 1) ids.forEach(record => resultsArray.push({ OrderNumber: record }));
-
-  return resultsArray.length > 0 ? resultsArray : [{ Error: 'An error occurred in the process of ignoring orders; please contact technical support.'}];
+const repushFailedStagedOrders = async (ids, mode = 'prod') => {  
+  if (mode === 'demo') return [{ Message: 'This feature has been disabled in the demo' }];
+  else {
+    const idsString = ids.join(',');
+    const query = `UPDATE Orders SET PushStatusId = NULL WHERE OrderNumber in (${idsString})`;
+    const recordSet = await dbQuery(query);
+    const resultsArray = [];
+  
+    if (recordSet?.affectedRows >= 1) ids.forEach(record => resultsArray.push({ OrderNumber: record }));
+  
+    return resultsArray.length > 0 ? resultsArray : [{ Error: 'An error occurred in the process of respushing orders; please contact technical support.'}];
+  }
 }
 
 const ignoreFailedStagedOrders = async (ids, userId) => {
@@ -380,11 +389,17 @@ const ignoreFailedStagedOrders = async (ids, userId) => {
   else return [];
 }
 
-const deleteFailedStagedOrder = async (ids) => {
-  const idsString = ids.join(',');
-  const query = `DELETE FROM Orders OUTPUT DELETED.OrderNumber WHERE OrderNumber in (${idsString})`;
-  const { recordSet } = await dbQuery(query);
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+const deleteFailedStagedOrder = async (ids, mode = 'prod') => {  
+  if (mode === 'demo') return [{ Message: 'This feature has been disabled in the demo' }];
+  else {
+    const idsString = ids.join(',');
+    const query = `DELETE FROM Orders WHERE OrderNumber in (${idsString})`;
+    const recordSet = await dbQuery(query);
+
+    if (recordSet && recordSet.affectedRows && recordSet.affectedRows === ids.length) recordSet = ids.map(id => ({ Id: id }));
+
+    return recordSet;
+  }
 }
 
 const unignoreIgnoredOrders = async (ids) => {
@@ -398,8 +413,6 @@ const unignoreIgnoredOrders = async (ids) => {
     if ('CRM' === key) crmIds.push(id[key]);
     else if ('ERP' === key) erpIds.push(id[key]);
   });
-
-  console.log({crmIds, erpIds});
 
   const crmQuery = `UPDATE OrderStagingErrors 
     SET IgnoredAt = NULL, IgnoredBy = NULL 
@@ -434,8 +447,6 @@ const unignoreIgnoredOrders = async (ids) => {
 
     return combinedReturn;
   } else { // Without crmResult.
-
-    console.log({erpResultOne, erpResultTwo});
     if (erpResultOne && erpResultTwo) {
       if (erpResultOne.affectedRows === erpIds.length && erpResultTwo.affectedRows === erpIds.length) return erpIds.map(id => ({ OrderNumber: id }));
       else return null;
