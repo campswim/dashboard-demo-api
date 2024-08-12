@@ -366,7 +366,7 @@ const repushFailedStagedOrders = async (ids, mode = 'prod') => {
   }
 }
 
-const ignoreFailedStagedOrders = async (ids, userId) => {
+const ignoreFailedStagedOrders = async (ids, mode = 'prod', userId) => {  
   const idsString = ids.join(',');
   const todayUtc = new Date();
   const todayLocal = new Date(todayUtc.toISOString().split('.')[0] + '+07:00');

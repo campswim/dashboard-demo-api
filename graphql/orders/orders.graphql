@@ -15,7 +15,7 @@ type Mutation {
   repullCrmOrders(ids: [String]!, mode: String): [FailedCrmOrder]
   ignoreCrmOrders(ids: [String]!, mode: String): [FailedCrmOrder]
   repushFailedStagedOrders(ids: [String]!, mode: String): [FailedErpOrder]
-  ignoreFailedStagedOrders(ids: [String]!): [FailedErpOrder]
+  ignoreFailedStagedOrders(ids: [String]!, mode: String): [FailedErpOrder]
   unignoreOrder(ids: [IgnoredObject]!): [IgnoredOrder]
   deleteFailedStagedOrder(ids: [String]!, mode: String): [FailedErpOrder]
 }
