@@ -53,31 +53,39 @@ const getParamSettings = async () => {
 
 const getParamByName = async (name) => {
   const query = `SELECT * FROM AppParams WHERE Name = '${name}'`;
-  const { recordSet, message } = await dbQuery(query);
-  if (message) recordSet.Error.message = message;
+  const recordSet = await dbQuery(query);
   return recordSet;
 };
 
 const updateParamSettings = async ({ id, column, newValue }, user) => {
   if ('disable' === newValue) newValue = null;
   // const now = new Date().toISOString(); // Uses UTC, and we need local time.
-  const now = 'GETDATE()';
+  const now = 'NOW()';
   let query = `UPDATE AppParams SET ${column} = `;
   query += !newValue || newValue === 'None' ? 'NULL' : column === 'EnabledDate' && newValue ? now : `'${newValue}'`;
   query += `, ModifiedAt = ${now}, ModifiedBy = '${user}'`;
-  query += ` OUTPUT INSERTED.* WHERE Name like '%${id}%'`;
-  const { recordSet } = await dbQuery(query);
-    
+  query += ` WHERE Name like '%${id}%'`;
+  let recordSet = await dbQuery(query);
+  
+  if (recordSet) {
+    if (recordSet.changedRows && recordSet.changedRows === 1) {
+      query = `SELECT * FROM AppParams WHERE Name like '%${id}%'`;
+      recordSet = await dbQuery(query);
+    }
+  }
+
   return recordSet;
 };
 
 const updateMapSettings = async ({ id, column, newValue }, user) => {
   // const now = new Date().toISOString();
-  const now = 'GETDATE()';
-  const query = `UPDATE Maps SET ${column} = ${!newValue ? newValue : `'${newValue}'`}, ModifiedAt = ${now}, ModifiedBy = '${user}' OUTPUT INSERTED.* WHERE Id = ${id}`;
+  const now = new Date();
+  const query = `UPDATE Maps SET ${column} = ${!newValue ? newValue : `'${newValue}'`}, ModifiedAt = NOW(), ModifiedBy = '${user}' WHERE Id = ${id}`;
   const results = await dbQuery(query);
 
-  return results.recordSet ? results.recordSet : { Error: results.message };
+  if (results) {
+    if (results.changedRows && results.changedRows === 1) return { [column]: newValue, EnabledDate: now, Error: { message: null }};
+  } else return { Error: { message: 'An error occurred in the process of updating the Warehouse Map value.' }};
 };
 
 const getType = async ({ table, column }) => {
