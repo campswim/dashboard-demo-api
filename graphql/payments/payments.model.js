@@ -4,7 +4,6 @@ const dbQuery = require('../../helpers/db_query');
 const usersModel = require('../users/users.model');
 
 const getAllFailedPayments = async () => {
-  // For production.
   const query = `SELECT
       p.OrderNumber,
       p.PaymentType,
@@ -13,7 +12,8 @@ const getAllFailedPayments = async () => {
       p.CardNumber,
       pt.AttemptedAt,
       pt.DismissedAt,
-      pt.DismissedBy,
+      pt.DismissedBy as UserId,
+      u.Name as DismissedBy,
       pt.ErrorReason,
       pt.PaymentId,
       o.CurrencyCode
@@ -21,8 +21,9 @@ const getAllFailedPayments = async () => {
       PaymentsTracking pt
       join Payments p on pt.PaymentId = p.Id
       join Orders o on p.OrderNumber = o.OrderNumber
+      left join Users u on DismissedBy = u.Id
     where
-      ErrorReason is not NULL
+      ErrorReason is not NULL || DismissedBy is not NULL
   `;
 
   let dismissedByIds, usernames, dismissedRecords;
@@ -95,7 +96,7 @@ const getAllUnpushedPayments = async () => {
 const dismissPaymentError = async (ids, user) => {
   if (!ids || !user) return;
 
-  const now = 'GETDATE()';
+  const now = new Date();
   let idString, query, recordSet;
 
   ids.forEach((id, idx) => {
@@ -107,20 +108,20 @@ const dismissPaymentError = async (ids, user) => {
     }
   });
 
-  query = `UPDATE PaymentsTracking SET ErrorReason = NULL, DismissedAt = ${now}, DismissedBy = '${user.id}' OUTPUT INSERTED.PaymentId, INSERTED.DismissedAt, INSERTED.DismissedBy WHERE PaymentId IN (${idString})`;
+  query = `UPDATE PaymentsTracking SET DismissedAt = NOW(), DismissedBy = '${user.id}' WHERE PaymentId IN (${idString})`;
 
-  ({ recordSet } = await dbQuery(query));
+  recordSet = await dbQuery(query);
 
   // Add the DismisssedBy property to the returned object(s).
   if (recordSet) {
-    if (Array.isArray(recordSet)) {
-      recordSet.forEach((record, idx) => recordSet[idx].DismissedBy = user.name);
-    } else {
-      recordSet.DismissedBy = user.name;
+    if (recordSet.changedRows && recordSet.changedRows === ids.length) {
+      recordSet = ids.map(record => ({ PaymentId: record, DismissedAt: now, DismissedBy: user.name }));
+      return recordSet;
     }
+  } else {
+    return [{ Error: 'An error occurred in the process of dismissing payment errors' }];
   }
 
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
 }
 
 const reinstatePaymentError = async (ids) => {
@@ -137,15 +138,18 @@ const reinstatePaymentError = async (ids) => {
     }
   });
 
-  // Fetch the error reason from the payments-tracking-history table: this part of the process has not yet been worked out or tested. This function to be disabled in the dashboard for now. If it gets enabled, to reinstate a payment error, the reason will have to be fetched from the PTHistory table and inserted into the payments-tracking table where the payment ID matches.
-  // query = `SELECT PaymentID, ErrorReason FROM PaymentsTrackingHistory WHERE PaymentId IN (${idString})`;
-  // ({ recordSet } = await dbQuery(query));
+  query = `UPDATE PaymentsTracking SET DismissedAt = NULL, DismissedBy = NULL WHERE PaymentId IN (${idString})`;
 
-  query = `UPDATE PaymentsTracking SET DismissedAt = NULL, DismissedBy = NULL OUTPUT INSERTED.PaymentId WHERE PaymentId IN (${idString})`;
+  recordSet = await dbQuery(query);
 
-  ({ recordSet } = await dbQuery(query));
-
-  return Array.isArray(recordSet) ? recordSet : [recordSet];
+  if (recordSet) {
+    if (recordSet.changedRows && recordSet.changedRows === ids.length) {
+      recordSet = ids.map(record => ({ PaymentId: record }));
+      return recordSet;
+    }
+  } else {
+    return [{ Error: 'An error occurred in the process of reinstating payment errors'}];
+  }
 }
 
 module.exports = {
