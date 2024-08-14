@@ -141,7 +141,7 @@ const signin = async ({ id, password }, secret, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
-      partitioned: 'Partitioned',
+      partitioned: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
       path: '/',
     });
@@ -161,6 +161,7 @@ const signout = async (user, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none',
+    partitioned: process.env.NODE_ENV === 'production',
     maxAge: -1,
     path: '/',
   });
