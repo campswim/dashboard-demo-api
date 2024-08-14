@@ -139,12 +139,11 @@ const signin = async ({ id, password }, secret, res) => {
     const lastLoginResult = await dbQuery(query);
     const serialized = cookie.serialize('token', token, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
-      secure: false,
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
       maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
       path: '/',
-    });          
+    });
     
     if (lastLoginResult && lastLoginResult.changedRows === 1) error = '';
     else error = lastLoginResult.info;
@@ -159,9 +158,8 @@ const signout = async (user, res) => {
   // Expire the token http-only cookie.
   const serialized = cookie.serialize('token', null, {
     httpOnly: true,
-    // secure: process.env.NODE_ENV === 'production',
-    secure: false,
-    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
     maxAge: -1,
     path: '/',
   });
