@@ -90,7 +90,7 @@ const getAllUnpushedOrders = async () => { // Used for the homepage's "Staged Or
   // Collate the ignored-orders returns.
   if (ignored) {
     if (Array.isArray(ignored)) {
-      ignored.recordSet.forEach(record => {
+      ignored.forEach(record => {
         const obj = {
           Type: 'Ignored',
           Market: record.Market,
