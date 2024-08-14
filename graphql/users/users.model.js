@@ -40,9 +40,7 @@ const getUsersByIds = async (idArray) => {
   const idIntArray = idArray.map(val => parseInt(val));
   const idString = idArray.join(',');
   const query = `SELECT u.Id, Email, Name, r.Role as Role, DateRegistered, LastLogin, LoggedIn, FailedAttempts FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id in (${idString})`;  
-  const { recordSet } = await dbQuery(query);
-    
-  return recordSet;
+  return await dbQuery(query);
 };
 
 const getUserByEmail = async (email) => {  
@@ -53,8 +51,7 @@ const getUserByEmail = async (email) => {
 
 const getMe = async (id) => {
   const query = `SELECT * FROM Users WHERE Id = ${id}`;
-  const { recordSet } = await dbQuery(query);
-  return recordSet;
+  return await dbQuery(query);
 };
 
 const deleteUser = async (ids) => {

@@ -22,9 +22,7 @@ const getMapSettings = async () => {
       Maps m
       LEFT JOIN Users u ON ModifiedBy = u.Id`
   ;
-  const result = await dbQuery(query);
-  
-  return result.recordSet ? result.recordSet : result;
+  return await dbQuery(query);
 };
 
 const getParamSettings = async () => {
@@ -46,9 +44,7 @@ const getParamSettings = async () => {
       LEFT JOIN AppParamValueTypes apvt ON ap.ValueTypeId = apvt.ID
       LEFT JOIN Users u ON ModifiedBy = u.Id
   `;
-  const result = await dbQuery(query);
-
-  return result.recordSet ? result.recordSet : result;
+  return await dbQuery(query);
 };
 
 const getParamByName = async (name) => {
@@ -102,8 +98,7 @@ const getType = async ({ table, column }) => {
 
 const getValueTypeId = async (dataType) => {
   const query = `SELECT Id FROM AppParamValueTypes WHERE Type = '${dataType}'`;
-  const { recordSet } = await dbQuery(query);
-  return recordSet;
+  return await dbQuery(query);
 };
 
 const logChange = async({ table, rowName, column, prevValue, newValue, dataType }, user) => {

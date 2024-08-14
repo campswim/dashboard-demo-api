@@ -305,8 +305,7 @@ const getAllIgnoredOrders = async (userId) => {
 const getOrderDetails = async (id) => {
   if (!id) return { Error: 'No Order ID was provided to the API.'};
   
-  const query = `SELECT OrderNumber, CustomerNumber, Market, CurrencyCode, OrderTypeDescription, ReferenceOrderNumber,OrderTotalAmount, TaxAmount, FreightAmount, FreightTaxAmount, OrderDate, ShipDate, Warehouse, ShipMethod, PickupName, StagingImportDate as PulledDate, SentToErp, ErpOrderNumber FROM Orders WHERE OrderNumber = '${id}'`;
-
+  const query = `SELECT OrderNumber, CustomerNumber, Market, CurrencyCode, PushStatusId, OrderTypeDescription, ReferenceOrderNumber, OrderTotalAmount, TaxAmount, FreightAmount, FreightTaxAmount, OrderDate, ShipDate, Warehouse, ShipMethod, PickupName, StagingImportDate as PulledDate, SentToErp, ErpOrderNumber FROM Orders WHERE OrderNumber = '${id}'`;
   const result = await dbQuery(query);
   
   return !result ? { Error: 'An error occurred in the getOrderDetails function of the API', result } : Array.isArray(result) && result.length <= 0 ? null : result;
@@ -324,7 +323,7 @@ const getCrmOrderDetails = async (id) => {
 const getPushStatusById = async (id) => {
   if (!id) return { Error: 'No Order ID was provided to the API.' };
   const query = `SELECT * FROM PushStatuses WHERE Id = ${id}`;
-  const { recordSet } = await dbQuery(query);
+  const recordSet = await dbQuery(query);
   return recordSet;
 };
 
