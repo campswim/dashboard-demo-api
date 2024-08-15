@@ -67,7 +67,6 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://campswim-dashboard-demo.netlify.app',
-    'https://campswim-dashboard-demo.netlify.app/api'
   ],
   credentials: true,
 }));
