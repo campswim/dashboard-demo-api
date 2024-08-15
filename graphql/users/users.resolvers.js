@@ -24,7 +24,8 @@ module.exports = {
     signup: async (_, args) => { return await usersModel.signup(args); },
     signin: async (_, args, { secret, context }) => {
       const res = context.context.res;
-      const { user, error } = await usersModel.signin(args, secret, res);
+      const origin = context.headers['user-agent'];
+      const { user, error } = await usersModel.signin(args, secret, res, origin);
       if (error) user.Error = error;
       return user;
     },
