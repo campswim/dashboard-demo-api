@@ -105,9 +105,7 @@ const signup = async ({ email, usersName, password, role }) => {
   }
 }; 
 
-const signin = async ({ id, password }, secret, res, origin) => {
-  // const safariBoolean = origin.includes('Safari') && !origin.includes('Chrome') ? true : false;
-  const safariBoolean = true;
+const signin = async ({ id, password }, secret, res) => {
   const user = await dbQuery(`SELECT u.Id, Name, r.Role, r.Id as RoleId, Hash FROM Users u JOIN Roles r ON u.Role = r.Id WHERE u.Id = '${id}'`);
   const date = new Date().toLocaleString(); // Set local time of client.
   // const date = new Date().toISOString(); // Sets UTC, but need local time.
@@ -139,28 +137,24 @@ const signin = async ({ id, password }, secret, res, origin) => {
   if (token) {
     // Set the last-login date to today.
     const lastLoginResult = await dbQuery(query);
-    const serialized = safariBoolean ? 
-    (
-      cookie.serialize('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        // partitioned: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
-        path: '/',
-      })
-    )
-    :
-    (
-      cookie.serialize('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        partitioned: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
-        path: '/',
-      })
-    )
+    const serialized = cookie.serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      // partitioned: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
+      path: '/',
+    });
+
+      /* Used this config for third-party cookies, but that didn't work in safari, so had to use a rewrite rule in the _redirects file of the build folder on the frontsite. */
+      // cookie.serialize('token', token, {
+      //   httpOnly: true,
+      //   secure: process.env.NODE_ENV === 'production',
+      //   sameSite: 'none',
+      //   partitioned: process.env.NODE_ENV === 'production',
+      //   maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
+      //   path: '/',
+      // })
     
     if (lastLoginResult && lastLoginResult.changedRows === 1) error = '';
     else error = lastLoginResult.info;
