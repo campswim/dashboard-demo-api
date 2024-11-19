@@ -96,4 +96,49 @@ const getAllErpItems = async (itemCodes, markets, user, env) => {
   return error ? [{ Error: error }] : items;
 }
 
-module.exports = { checkDbConnection, getAllActiveItems, getAllErpItems };
+const getOrderSummaryByMonth = async (monthsBack) => {
+  if (!monthsBack) monthsBack = 4;
+
+  // Hardcode the current date, so that it will pull data from the mocked DB, the dates of which end in June. Also, there's only one month of data, so the chart isn't going to be very impressive until more order data is added. Date format for CURRDATE() = 'YYYY-MM-DD'.
+  const currDate = '2023-06-30';
+
+  const query = `SELECT
+      COUNT(*) AS Count, 
+      DATE_FORMAT(o.OrderDate, '%Y-%m') AS Month, 
+      o.OrderTypeDescription AS OrderType
+    FROM Orders o 
+      WHERE o.OrderDate > DATE_SUB('${currDate}', INTERVAL ${monthsBack} MONTH)
+    GROUP BY 
+      DATE_FORMAT(o.OrderDate, '%Y-%m'), 
+      OrderTypeDescription
+  `;
+
+  const result = await dbQuery(query);
+
+  return Array.isArray(result) ? result : [result];
+};
+
+const getOrdersByMonthDay = async (month) => {
+  if (!month) return;
+  const yearMonthArray = month.split('-');
+  const year = yearMonthArray[0];
+  month = yearMonthArray[1];
+
+  const query = `
+    SELECT 
+      DAY(o.OrderDate) as Day, 
+      COUNT(*) as OrderCount
+    FROM Orders o
+    WHERE 
+      YEAR(o.OrderDate) = ${year} AND 
+      MONTH(o.OrderDate) = ${month}
+    GROUP BY DAY(o.OrderDate)
+    ORDER BY DAY(o.OrderDate);
+  `;
+
+  const result = await dbQuery(query);
+
+  return !Array.isArray(result) ? [result] : result;
+;}
+
+module.exports = { checkDbConnection, getAllActiveItems, getAllErpItems, getOrderSummaryByMonth, getOrdersByMonthDay };

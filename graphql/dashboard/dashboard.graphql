@@ -2,6 +2,8 @@ type Query {
   checkDbConnection: DbConnected!
   getAllActiveItems(daysBack: Int!, markets: [String]!): [Item]
   getAllErpItems(itemCodes: [ItemObject]!, markets: [String]!, environment: String): [Item]
+  getOrderSummaryByMonth(monthsBack: Int!): [OrderType]
+  getOrdersByMonthDay(month: String!): [DailyOrderCount]
 }
 
 type Item {
@@ -13,6 +15,17 @@ type Item {
 type DbConnected {
   Connected: Boolean!
   Message: String
+}
+
+type OrderType {
+  Month: String
+  OrderType: String
+  Count: Int
+}
+
+type DailyOrderCount {
+  Day: Int
+  OrderCount: Int
 }
 
 input ItemObject {

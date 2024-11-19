@@ -9,7 +9,7 @@ function dbConnectMySql(database='STAGING') {
   const host = `${database}_HOST`;
   const jawsDb = process.env.JAWSDB_URL;
 
-  // Create a connection pool, if it doesn't already exist.
+  // Create a connection pool, if it doesn't already exist, using the jaswDb env var for production and the local db for development.
   const pool = jawsDb ? 
     mysql.createPool(jawsDb) : 
     mysql.createPool({

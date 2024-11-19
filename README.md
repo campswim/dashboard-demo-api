@@ -14,19 +14,9 @@ The nCompass order-staging dashboard tracks orders through their full lifecycle,
 1. Front-end
     - URL
       - Local development: `http://localhost:3000/`
-      - Manual deploy: `http://hulk.yoli.net:3001/`
-      - CI/CD deploy: `http://hulk.yoli.net:3002/`
-    - On the server
-      - :3001: C:\inetpub\wwwroot\Dashboard APP\build\
-      - :3002: C:\web\STAGE\ErpStageDashboard\
 2. Back-end
     - URL
       - Local development: `http://localhost:4000/graphql/`
-      - Manual deploy: `http:/hulk.yoli.net:4000/graphql/`
-      - CI/CD deploy: N/A
-    - On the server
-      - Manual deploy: C:\inetpub\wwwroot\Dashboard API\
-      - CI/CD: N/A
 
 ## To Run the App Locally
 
