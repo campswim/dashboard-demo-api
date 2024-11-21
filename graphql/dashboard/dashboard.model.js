@@ -96,21 +96,20 @@ const getAllErpItems = async (itemCodes, markets, user, env) => {
   return error ? [{ Error: error }] : items;
 }
 
-const getOrderSummaryByMonth = async (monthsBack) => {
-  if (!monthsBack) monthsBack = 4;
-
+const getOrderSummaryByMonth = async (monthsBack = 4) => {
   // Hardcode the current date, so that it will pull data from the mocked DB, the dates of which end in June. Also, there's only one month of data, so the chart isn't going to be very impressive until more order data is added. Date format for CURRDATE() = 'YYYY-MM-DD'.
-  const currDate = '2023-06-30';
+  const currDate = '2024-11-20';
 
   const query = `SELECT
-      COUNT(*) AS Count, 
-      DATE_FORMAT(o.OrderDate, '%Y-%m') AS Month, 
+      COUNT(*) AS Count,
+      DATE_FORMAT(o.OrderDate, '%Y-%m') AS Month,
       o.OrderTypeDescription AS OrderType
-    FROM Orders o 
-      WHERE o.OrderDate > DATE_SUB('${currDate}', INTERVAL ${monthsBack} MONTH)
-    GROUP BY 
-      DATE_FORMAT(o.OrderDate, '%Y-%m'), 
-      OrderTypeDescription
+    FROM Orders o
+    WHERE o.OrderDate >= DATE_FORMAT(DATE_SUB('${currDate}', INTERVAL ${monthsBack - 1} MONTH), '%Y-%m-01')
+      AND o.OrderDate < DATE_FORMAT(DATE_ADD('${currDate}', INTERVAL 1 MONTH), '%Y-%m-01')
+    GROUP BY
+      DATE_FORMAT(o.OrderDate, '%Y-%m'),
+      OrderTypeDescription;
   `;
 
   const result = await dbQuery(query);

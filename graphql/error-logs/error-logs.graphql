@@ -1,0 +1,12 @@
+type Query {
+  getErrorLogs(numOfErrors: Int!, errorLevel: String): [Errors]
+}
+
+type Errors {
+  Level: String
+  TimeStamp: String
+  Message: String
+  Exception: String
+  MachineName: String
+  JobName: String
+}
