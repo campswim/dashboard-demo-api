@@ -4,9 +4,6 @@ const axios = require('axios');
 const dbQuery = require('../../helpers/db_query');
 
 const getErrorLogs = async (numOfErrors, errorLevel = null) => {
-
-  console.log({numOfErrors, errorLevel});
-  
   const query = `SELECT 
     Level, 
     TimeStamp, 
